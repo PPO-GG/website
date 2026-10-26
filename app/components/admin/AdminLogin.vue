@@ -1,5 +1,4 @@
 <script setup lang="ts">
-const emit = defineEmits<{ done: [] }>()
 
 const admin = useAdmin()
 const email = ref('')
@@ -12,7 +11,6 @@ async function submit() {
   error.value = ''
   try {
     await admin.login(email.value.trim(), password.value)
-    emit('done')
   } catch (e) {
     error.value = e instanceof Error && e.message.startsWith('This account') ? e.message : 'The email or the password is not correct.'
     console.error('[admin] login failed', e)

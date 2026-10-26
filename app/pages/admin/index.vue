@@ -32,10 +32,16 @@ const postForm = ref<PostForm>(blankPost(today()))
 const pageForm = ref<PageForm>(blankPage())
 const editing = ref<{ id?: string } | null>(null)
 
+// Load the lists whenever a user appears, from a saved session or a fresh login. The login form
+// unmounts as soon as the user is set, so its "done" event cannot be relied on to start the load.
+watch(() => admin.user.value, (u) => {
+  if (u) void loadAll()
+  else apps.value = posts.value = pages.value = []
+})
+
 onMounted(async () => {
   await admin.restore()
   ready.value = true
-  if (admin.user.value) await loadAll()
 })
 
 async function loadAll() {
@@ -50,10 +56,6 @@ async function loadAll() {
     console.error('[admin] could not load content', e)
     loadError.value = explain(e)
   }
-}
-
-async function onLoggedIn() {
-  await loadAll()
 }
 
 async function logout() {
@@ -151,7 +153,7 @@ const list = computed<{ id: string; title: string; sub: string; published: boole
 <template>
   <div class="wrap admin">
     <p v-if="!ready" class="notice">Loading</p>
-    <AdminLogin v-else-if="!admin.user.value" @done="onLoggedIn" />
+    <AdminLogin v-else-if="!admin.user.value" />
     <template v-else>
       <header class="admin-head">
         <h1>Admin</h1>
