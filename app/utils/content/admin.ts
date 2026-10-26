@@ -1,5 +1,8 @@
 import { APP_STATUS } from '~/types/app'
 import type { AppRow, AppStatus, PageRow, PostRow } from '~/types/app'
+import type { Block } from '~/types/blocks'
+import { BLOCK_TYPE } from '~/types/blocks'
+import { blankBlock, parseBody, serializeBlocks, validateBlocks } from '~/utils/content/blocks'
 import { isValidSlug } from '~/utils/content/slug'
 
 export interface AppForm {
@@ -26,10 +29,16 @@ export interface PostForm {
   published: boolean
 }
 
+export type PageMode = 'blocks' | 'markdown'
+
 export interface PageForm {
   title: string
   slug: string
+  mode: PageMode
+  /** Used when mode is "markdown". */
   body: string
+  /** Used when mode is "blocks". */
+  blocks: Block[]
   published: boolean
 }
 
@@ -97,7 +106,8 @@ export function validatePage(f: PageForm): string[] {
   const errors: string[] = []
   if (!f.title.trim()) errors.push('Enter a title.')
   if (!isValidSlug(f.slug.trim())) errors.push(SLUG_HELP)
-  if (!f.body.trim()) errors.push('Write the body text.')
+  if (f.mode === 'blocks') errors.push(...validateBlocks(f.blocks))
+  else if (!f.body.trim()) errors.push('Write the body text.')
   return errors
 }
 
@@ -129,7 +139,15 @@ export function toPostData(f: PostForm): Record<string, unknown> {
 }
 
 export function toPageData(f: PageForm): Record<string, unknown> {
-  return { title: f.title.trim(), slug: f.slug.trim(), body: f.body, published: f.published }
+  const body = f.mode === 'blocks' ? serializeBlocks(f.blocks) : f.body
+  return { title: f.title.trim(), slug: f.slug.trim(), body, published: f.published }
+}
+
+/** Moves a Markdown page into the builder as one text block, so no content is lost. */
+export function markdownToBlocks(markdown: string): Block[] {
+  const b = blankBlock(BLOCK_TYPE.Text)
+  b.data.body = markdown
+  return [b]
 }
 
 export const blankApp = (): AppForm => ({
@@ -139,7 +157,7 @@ export const blankApp = (): AppForm => ({
 
 export const blankPost = (today: string): PostForm => ({ title: '', slug: '', description: '', body: '', date: today, published: false })
 
-export const blankPage = (): PageForm => ({ title: '', slug: '', body: '', published: false })
+export const blankPage = (): PageForm => ({ title: '', slug: '', mode: 'blocks', body: '', blocks: [], published: false })
 
 export function appToForm(row: AppRow): AppForm {
   return {
@@ -169,5 +187,8 @@ export function postToForm(row: PostRow): PostForm {
 }
 
 export function pageToForm(row: PageRow): PageForm {
-  return { title: row.title, slug: row.slug, body: row.body, published: row.published }
+  const parsed = parseBody(row.body)
+  return parsed.kind === 'blocks'
+    ? { title: row.title, slug: row.slug, mode: 'blocks', body: '', blocks: parsed.blocks, published: row.published }
+    : { title: row.title, slug: row.slug, mode: 'markdown', body: parsed.markdown, blocks: [], published: row.published }
 }

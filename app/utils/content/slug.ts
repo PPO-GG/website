@@ -1,5 +1,5 @@
 /** Slugs that would shadow a built-in route. */
-export const RESERVED_SLUGS: readonly string[] = ['admin', 'api', 'blog', 'login', 'logo', 'ppo', 'assets', 'shots', '_nuxt']
+export const RESERVED_SLUGS: readonly string[] = ['admin', 'api', 'blog', 'services', 'login', 'logo', 'ppo', 'assets', 'shots', '_nuxt']
 
 export const SLUG_MAX = 80
 

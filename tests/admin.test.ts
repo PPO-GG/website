@@ -68,10 +68,10 @@ describe('validatePost', () => {
 
 describe('validatePage', () => {
   it('accepts a complete form', () => {
-    expect(validatePage({ ...blankPage(), title: 'About', slug: 'about', body: 'Hi' })).toEqual([])
+    expect(validatePage({ ...blankPage(), mode: 'markdown', title: 'About', slug: 'about', body: 'Hi' })).toEqual([])
   })
   it('rejects a bad slug', () => {
-    expect(validatePage({ ...blankPage(), title: 'About', slug: 'About Us', body: 'Hi' })).toHaveLength(1)
+    expect(validatePage({ ...blankPage(), mode: 'markdown', title: 'About', slug: 'About Us', body: 'Hi' })).toHaveLength(1)
   })
 })
 
@@ -91,7 +91,7 @@ describe('toPostData', () => {
 
 describe('toPageData', () => {
   it('keeps title, slug, body and the published flag', () => {
-    expect(toPageData({ title: ' About ', slug: 'about', body: 'Hi', published: true })).toEqual({ title: 'About', slug: 'about', body: 'Hi', published: true })
+    expect(toPageData({ ...blankPage(), mode: 'markdown', title: ' About ', slug: 'about', body: 'Hi', published: true })).toEqual({ title: 'About', slug: 'about', body: 'Hi', published: true })
   })
 })
 
@@ -121,6 +121,6 @@ describe('row to form', () => {
   })
   it('maps a page row', () => {
     const row: PageRow = { $id: 'g', slug: 'about', title: 'About', body: 'B', published: false }
-    expect(pageToForm(row)).toEqual({ title: 'About', slug: 'about', body: 'B', published: false })
+    expect(pageToForm(row)).toEqual({ title: 'About', slug: 'about', mode: 'markdown', body: 'B', blocks: [], published: false })
   })
 })

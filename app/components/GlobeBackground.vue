@@ -48,13 +48,13 @@ onMounted(() => {
 
   function frame(t: number) {
     if (!ctx) return
-    // Page 1: big and centered behind the logo. Page 2: pushed to the lower right.
+    // Big and centered behind the logo, then pushed to the lower right and faded as the page scrolls.
     const prog = Math.min(1, Math.max(0, scrollY / Math.max(1, innerHeight)))
     const m = Math.min(w, h)
     const cx = lerp(w * 0.5, w * 0.84, prog)
     const cy = lerp(h * 0.5, h * 0.92, prog)
     const R = lerp(m * 0.42, m * 0.6, prog)
-    const base = lerp(0.3, 0.2, prog)
+    const base = lerp(0.3, 0.07, prog)
     if (!t0) t0 = t
     const intro = reduced ? 1 : Math.min(1, (t - t0) / INTRO_MS)
     const sweep = (1 - Math.pow(1 - intro, 2)) * (1 + INTRO_SPREAD + INTRO_NOISE)

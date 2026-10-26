@@ -2,7 +2,7 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: false },
   modules: ['@nuxtjs/mdc', '@nuxt/fonts'],
-  css: ['~/assets/css/main.css'],
+  css: ['~/assets/css/main.css', '~/assets/css/site.css'],
   runtimeConfig: {
     public: {
       appwrite: {
@@ -25,7 +25,7 @@ export default defineNuxtConfig({
     head: {
       htmlAttrs: { lang: 'en' },
       title: 'PPO',
-      meta: [{ name: 'description', content: 'ppo.gg builds software and web apps.' }],
+      meta: [{ name: 'description', content: 'PPO designs and builds powerful, fast and beautiful software.' }],
       link: [
         { rel: 'icon', type: 'image/png', href: '/ppo.png' },
       ],
