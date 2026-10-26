@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ppo.gg</title>
+<meta name="description" content="ppo.gg builds software and web apps.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blue:#1030ff;
+  --deep:#0a1fc4;
+  --ink:#fff;
+  --dim:rgba(255,255,255,.8);
+  --line:rgba(255,255,255,.28);
+  --mono:"Geist Mono",ui-monospace,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0}
+html{background:var(--blue);color:var(--ink);scroll-behavior:smooth}
+body{
+  font:400 15px/1.6 var(--mono);
+  min-height:100vh;
+  background:var(--blue);
+}
+a{color:inherit}
+:focus-visible{outline:2px solid #fff;outline-offset:3px}
+.wrap{width:min(1280px,100% - 32px);margin-inline:auto}
+html{scroll-snap-type:y proximity}
+
+header{display:flex;justify-content:space-between;align-items:center;padding:20px 0}
+header .st::before{content:"";display:inline-block;width:8px;height:8px;background:#fff;margin-right:10px;animation:blink 1.2s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+header a{text-decoration:none;border-bottom:1px solid var(--line)}
+header a:hover{border-color:#fff}
+
+/* hero */
+.hero{min-height:100vh;min-height:100svh;display:grid;grid-template-columns:minmax(0,1fr);justify-items:center;align-content:center;position:relative;scroll-snap-align:start}
+.hero .line{position:absolute;left:0;right:0;bottom:12svh}
+.logo{
+  width:min(1200px,100%);aspect-ratio:3/1;cursor:crosshair;position:relative;
+  touch-action:manipulation;
+}
+.logo canvas{width:100%;height:100%;display:block}
+.line{min-height:1.6em;text-align:center;color:var(--dim)}
+.line .caret{display:inline-block;width:.6em;height:1.1em;background:#fff;vertical-align:-.2em;margin-left:2px;animation:blink 1s steps(2) infinite}
+.hint{font-size:12px;color:var(--dim)}
+
+/* apps */
+section{min-height:100svh;padding:72px 0;display:grid;align-content:center;scroll-snap-align:start}
+h2{font:500 15px/1.4 var(--mono);color:var(--dim);margin-bottom:28px}
+.apps{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:40px;align-items:start}
+.list{list-style:none;padding:0}
+.row{
+  display:grid;grid-template-columns:1fr auto;gap:2px 16px;
+  padding:18px 0;border-bottom:1px solid var(--line);text-decoration:none;
+  transition:padding .2s,background .2s;
+}
+.row:first-child{border-top:1px solid var(--line)}
+.row b{font:500 22px/1.2 var(--mono)}
+.row .meta{color:var(--dim);font-size:13px}
+.row .tag{grid-row:1;grid-column:2;align-self:center;font-size:13px}
+.row .tag::before{content:"";display:inline-block;width:8px;height:8px;margin-right:8px;background:#fff}
+.row .tag.wip::before{background:transparent;border:1px solid #fff}
+.row:hover,.row:focus-visible,.row.on{background:#fff;color:var(--blue);padding-inline:14px}
+.row:hover .meta,.row:focus-visible .meta,.row.on .meta{color:var(--deep)}
+.row:hover .tag::before,.row.on .tag::before{background:var(--blue)}
+.row:hover .tag.wip::before,.row.on .tag.wip::before{background:transparent;border-color:var(--blue)}
+.preview{position:sticky;top:24px;border:1px solid #fff;background:var(--deep);aspect-ratio:8/5}
+.preview canvas{width:100%;height:100%;display:block}
+.preview .cap{position:absolute;left:10px;bottom:8px;font-size:12px;background:var(--blue);padding:0 6px}
+
+footer{padding:56px 0 72px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;color:var(--dim)}
+footer a{color:#fff}
+
+@media (max-width:800px){
+  .apps{grid-template-columns:1fr}
+  .preview{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <main>
+    <div class="hero">
+      <div class="logo" id="logo" role="img" aria-label="ppo.gg"><canvas id="logoCv"></canvas></div>
+      <p class="line" aria-live="off"><span id="type"></span><span class="caret"></span></p>
+    </div>
+
+    <section id="work" aria-label="Apps">
+      <div class="apps">
+        <ul class="list" id="list"></ul>
+        <div class="preview" aria-hidden="true">
+          <canvas id="pvCv"></canvas>
+          <span class="cap" id="cap"></span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span>ppo.gg &copy; 2026</span>
+    <span>send a signal: <a href="mailto:hello@ppo.gg">hello@ppo.gg</a></span>
+  </footer>
+</div>
+
+<script>
+/* ---- edit these ---------------------------------------------------- */
+// Put logo.svg or logo.png (white on transparent) next to this file to replace the text fallback.
+const LOGO_SRC = ["logo.svg", "logo.png"];
+// Placeholder apps. Add `img: "shots/name.png"` (8:5) to show a real screenshot in the preview.
+const APPS = [
+  { name: "app-one",   kind: "web app",     stack: "ts / react / postgres", year: 2026, status: "live",  href: "#" },
+  { name: "app-two",   kind: "desktop app", stack: "c# / wpf",              year: 2025, status: "live",  href: "#" },
+  { name: "app-three", kind: "web app",     stack: "vue / appwrite",        year: 2025, status: "live",  href: "#" },
+  { name: "app-four",  kind: "tool",        stack: "rust / cli",            year: 2024, status: "wip",   href: "#" },
+];
+const LINES = [
+  "software, compiled from intent.",
+  "web apps. shipped, not described.",
+  "0x70706f // build. run. repeat.",
+  "signal > noise.",
+  "if it runs, it ships.",
+];
+/* -------------------------------------------------------------------- */
+
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function mk(w, h){ const c = document.createElement("canvas"); c.width = w; c.height = h; return c; }
+
+// Successive halving keeps big downscales from aliasing.
+function down(src, w, h){
+  let cur = src;
+  while (cur.width / 2 >= w && cur.height / 2 >= h){
+    const n = mk(Math.ceil(cur.width / 2), Math.ceil(cur.height / 2));
+    const x = n.getContext("2d"); x.imageSmoothingQuality = "high";
+    x.drawImage(cur, 0, 0, n.width, n.height); cur = n;
+  }
+  const o = mk(w, h), x = o.getContext("2d"); x.imageSmoothingQuality = "high";
+  x.drawImage(cur, 0, 0, w, h); return o;
+}
+
+// Pixelated until hot; each step splits every block into smaller ones.
+const all = [];
+// tiles: draw each block as a separate square with a gap, built bottom to top on load.
+class Pix {
+  constructor(cv, steps, ms, tiles, radial){
+    this.cv = cv; this.ctx = cv.getContext("2d"); this.steps = steps; this.ms = ms;
+    this.level = 0; this.hot = false; this.last = 0; this.lv = []; this.grids = [];
+    this.tiles = !!tiles; this.p = 1; this.pt = 0;
+    this.radialOpt = !!radial; this.radial = false;
+    this.f = 0; this.mx = 0; this.my = 0; this.tx = 0; this.ty = 0; this.lt = 0;
+    all.push(this);
+  }
+  // Pointer position in canvas pixels; the sharp area grows out from here.
+  point(e, snap){
+    const r = this.cv.getBoundingClientRect();
+    this.tx = (e.clientX - r.left) / r.width * this.cv.width;
+    this.ty = (e.clientY - r.top) / r.height * this.cv.height;
+    if (snap) { this.mx = this.tx; this.my = this.ty; }
+  }
+  setSource(src, reset){
+    this.cv.width = src.width; this.cv.height = src.height; this.src = src;
+    const n = this.steps.length, C0 = Math.ceil(src.width / this.steps[0]), R0 = Math.ceil(src.height / this.steps[0]);
+    // Radial mode: each level has exactly 2x2 cells per parent, so cells can subdivide individually.
+    this.lv = this.radialOpt
+      ? this.steps.map((b, k) => k === n - 1 ? src : down(src, C0 << k, R0 << k))
+      : this.steps.map(b => b === 1 ? src : down(src, Math.max(1, Math.ceil(src.width / b)), Math.max(1, Math.ceil(src.height / b))));
+    this.grids = [];
+    if (this.tiles){
+      try {
+        this.grids = this.lv.map((c, i) => {
+          if (this.radialOpt ? i === n - 1 : this.steps[i] === 1) return null;
+          const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data, a = new Uint8Array(c.width * c.height);
+          for (let k = 0; k < a.length; k++) a[k] = d[k * 4 + 3];
+          return { cols: c.width, rows: c.height, a };
+        });
+      } catch (e) { this.tiles = false; } // tainted canvas (file://): fall back to smooth blocks
+    }
+    this.radial = this.radialOpt && this.tiles && !reduced;
+    this.Rmax = src.width * .11;
+    if (!this.mx) { this.mx = this.tx = src.width / 2; this.my = this.ty = src.height / 2; }
+    if (reset){
+      this.level = reduced ? this.steps.length - 1 : 0;
+      this.p = reduced || !this.tiles ? 1 : 0; this.pt = 0;
+    }
+    this.draw();
+  }
+  draw(){
+    if (!this.lv.length) return;
+    const c = this.ctx, W = this.cv.width, H = this.cv.height, last = this.level === this.steps.length - 1;
+    c.clearRect(0, 0, W, H);
+    const g = this.tiles && this.grids[this.level];
+    if (!g){ c.imageSmoothingEnabled = last; c.drawImage(this.lv[this.level], 0, 0, W, H); return; }
+    if (this.radial) return this.drawRadial();
+    this.drawGrid(g);
+  }
+  // Squares near the pointer split into 4, again and again; a per-cell random
+  // offset makes the border between coarse and fine noisy instead of a clean ring.
+  drawRadial(){
+    const c = this.ctx, W = this.cv.width, H = this.cv.height, n = this.steps.length, T = n - 1;
+    const R = this.f * this.Rmax, x = this.mx, y = this.my, grids = this.grids, p = this.p;
+    const path = new Path2D(), vec = new Path2D(); let hasVec = false;
+    const cell = (k, q, r) => {
+      const g = grids[k], a = g.a[r * g.cols + q];
+      if (a === 0) return;
+      const cw = W / g.cols, ch = H / g.rows;
+      let target = 0;
+      if (R > 1){
+        const d = Math.hypot((q + .5) * cw - x, (r + .5) * ch - y);
+        if (d < R * 1.35){
+          const h = (((q * 73856093) ^ (r * 19349663) ^ (k * 83492791)) >>> 0) % 1000 / 1000;
+          const u = 1 - d / R + (h - .5) * .7;
+          target = u <= 0 ? 0 : Math.min(T, 1 + Math.floor(u * T));
+        }
+      }
+      if (target > k){
+        if (k < T - 1){ const q2 = q * 2, r2 = r * 2; cell(k + 1, q2, r2); cell(k + 1, q2 + 1, r2); cell(k + 1, q2, r2 + 1); cell(k + 1, q2 + 1, r2 + 1); }
+        else { vec.rect(q * cw, r * ch, cw, ch); hasVec = true; }
+        return;
+      }
+      if (a < 115) return;
+      if (p < 1){
+        const j = ((q * 73856093) ^ (r * 19349663)) >>> 0, t = (g.rows - 1 - r) / g.rows;
+        if (t + (j % 1000) / 1000 * .18 > p * 1.18) return;
+      }
+      const gx = cw * .16, gy = ch * .16;
+      path.rect(q * cw + gx / 2, r * ch + gy / 2, cw - gx, ch - gy);
+    };
+    const g0 = grids[0];
+    for (let r = 0; r < g0.rows; r++) for (let q = 0; q < g0.cols; q++) cell(0, q, r);
+    c.fillStyle = "#fff"; c.fill(path);
+    if (hasVec){
+      const bx = Math.max(0, x - R * 1.4), by = Math.max(0, y - R * 1.4), bw = Math.min(W, x + R * 1.4) - bx, bh = Math.min(H, y + R * 1.4) - by;
+      c.save(); c.clip(vec); c.imageSmoothingEnabled = true;
+      c.drawImage(this.lv[T], bx, by, bw, bh, bx, by, bw, bh); c.restore();
+    }
+  }
+  // Only cells inside the box (cx, cy, rad) are visited; all squares go in one path.
+  drawGrid(g, cx, cy, rad){
+    const c = this.ctx, W = this.cv.width, H = this.cv.height;
+    const cw = W / g.cols, ch = H / g.rows, gx = cw * .16, gy = ch * .16;
+    const q0 = rad === undefined ? 0 : Math.max(0, Math.floor((cx - rad) / cw)), q1 = rad === undefined ? g.cols - 1 : Math.min(g.cols - 1, Math.ceil((cx + rad) / cw));
+    const r0 = rad === undefined ? 0 : Math.max(0, Math.floor((cy - rad) / ch)), r1 = rad === undefined ? g.rows - 1 : Math.min(g.rows - 1, Math.ceil((cy + rad) / ch));
+    c.fillStyle = "#fff"; c.beginPath();
+    for (let r = r0; r <= r1; r++){
+      const t = (g.rows - 1 - r) / g.rows;
+      for (let q = q0; q <= q1; q++){
+        if (g.a[r * g.cols + q] < 115) continue;
+        if (this.p < 1){
+          const j = ((q * 73856093) ^ (r * 19349663)) >>> 0;
+          if (t + (j % 1000) / 1000 * .18 > this.p * 1.18) continue;
+        }
+        c.rect(q * cw + gx / 2, r * ch + gy / 2, cw - gx, ch - gy);
+      }
+    }
+    c.fill();
+  }
+  tick(t){
+    if (reduced) { this.level = this.steps.length - 1; return; }
+    if (this.p < 1){
+      if (!this.pt) this.pt = t;
+      this.p = Math.min(1, (t - this.pt) / 1600); this.draw();
+    }
+    if (this.radial){
+      const dt = this.lt ? Math.min(64, t - this.lt) : 16; this.lt = t;
+      const to = this.hot ? 1 : 0, df = (to - this.f) * Math.min(1, dt / 220);
+      const dx = (this.tx - this.mx) * Math.min(1, dt / 90), dy = (this.ty - this.my) * Math.min(1, dt / 90);
+      if (Math.abs(df) > 1e-4 || (this.f > 0 && (Math.abs(dx) + Math.abs(dy) > .05))){
+        this.f = Math.abs(to - this.f) < .003 ? to : this.f + df; this.mx += dx; this.my += dy; this.draw();
+      }
+      return;
+    }
+    if (t - this.last < this.ms) return;
+    const target = this.hot ? this.steps.length - 1 : 0;
+    if (this.level === target) return;
+    this.last = t; this.level += this.level < target ? 1 : -1; this.draw();
+  }
+}
+requestAnimationFrame(function loop(t){ all.forEach(p => p.tick(t)); requestAnimationFrame(loop); });
+
+/* ---- logo ---------------------------------------------------------- */
+const logoWrap = document.getElementById("logo");
+const logo = new Pix(document.getElementById("logoCv"), [18, 9, 5, 3, 1], 150, true, true);
+
+function textLogo(){
+  const W = 1800, H = 600, c = mk(W, H), x = c.getContext("2d");
+  x.fillStyle = "#fff"; x.textBaseline = "alphabetic"; x.textAlign = "center";
+  let size = 440; x.font = `700 ${size}px "Space Grotesk",sans-serif`;
+  const w = x.measureText("ppo.gg").width; size *= Math.min(1, (W * .94) / w);
+  x.font = `700 ${size}px "Space Grotesk",sans-serif`;
+  x.fillText("ppo.gg", W / 2, H * .66);
+  return c;
+}
+function imageLogo(i){
+  if (i >= LOGO_SRC.length) return Promise.resolve(null);
+  return new Promise(res => {
+    const im = new Image();
+    im.onload = () => {
+      const W = 1800, H = 600, c = mk(W, H), s = Math.min(W / im.width, H / im.height) * .9;
+      c.getContext("2d").drawImage(im, (W - im.width * s) / 2, (H - im.height * s) / 2, im.width * s, im.height * s);
+      res(c);
+    };
+    im.onerror = () => res(imageLogo(i + 1));
+    im.src = LOGO_SRC[i];
+  });
+}
+Promise.all([document.fonts.load('700 100px "Space Grotesk"').catch(() => {}), imageLogo(0)])
+  .then(([, img]) => logo.setSource(img || textLogo(), true));
+
+logoWrap.addEventListener("pointerenter", e => { logo.point(e, !logo.f); logo.hot = true; });
+logoWrap.addEventListener("pointermove", e => logo.point(e));
+logoWrap.addEventListener("pointerleave", () => logo.hot = false);
+logoWrap.addEventListener("pointerdown", e => { if (e.pointerType !== "mouse"){ logo.point(e, !logo.f); logo.hot = true; } });
+
+/* ---- cryptic line -------------------------------------------------- */
+const typeEl = document.getElementById("type");
+if (reduced) typeEl.textContent = LINES[0];
+else (async function run(){
+  let i = 0;
+  for (;;){
+    const s = LINES[i++ % LINES.length];
+    for (let k = 1; k <= s.length; k++){ typeEl.textContent = s.slice(0, k); await new Promise(r => setTimeout(r, 45)); }
+    await new Promise(r => setTimeout(r, 2200));
+    for (let k = s.length; k >= 0; k--){ typeEl.textContent = s.slice(0, k); await new Promise(r => setTimeout(r, 18)); }
+    await new Promise(r => setTimeout(r, 300));
+  }
+})();
+
+/* ---- apps ---------------------------------------------------------- */
+const list = document.getElementById("list"), cap = document.getElementById("cap");
+const pv = new Pix(document.getElementById("pvCv"), [40, 20, 10, 5, 2, 1], 90);
+
+// Placeholder screenshot: deterministic wireframe so the effect has something to resolve.
+function fakeShot(app){
+  const W = 960, H = 600, c = mk(W, H), x = c.getContext("2d");
+  let s = 0; for (const ch of app.name) s = (s * 31 + ch.charCodeAt(0)) >>> 0;
+  const r = () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296;
+  x.fillStyle = "#fff"; x.strokeStyle = "#fff"; x.lineWidth = 6;
+  x.strokeRect(30, 30, W - 60, H - 60);
+  x.fillRect(30, 30, W - 60, 56);
+  x.fillRect(30, 86, 190, H - 116);
+  for (let i = 0; i < 6; i++) x.fillRect(52, 120 + i * 42, 60 + r() * 100, 14);
+  for (let i = 0; i < 4; i++){ const h = 60 + r() * 220; x.fillRect(260 + i * 160, 520 - h, 110, h); }
+  x.fillRect(260, 120, 300 + r() * 200, 22);
+  x.font = '700 64px "Space Grotesk",sans-serif'; x.fillText(app.name, 700 - 160, 200);
+  return c;
+}
+const shots = new Map();
+function shotFor(app){
+  if (shots.has(app)) return Promise.resolve(shots.get(app));
+  const fallback = () => { const c = fakeShot(app); shots.set(app, c); return c; };
+  if (!app.img) return Promise.resolve(fallback());
+  return new Promise(res => {
+    const im = new Image();
+    im.onload = () => { const c = mk(960, 600); c.getContext("2d").drawImage(im, 0, 0, 960, 600); shots.set(app, c); res(c); };
+    im.onerror = () => res(fallback());
+    im.src = app.img;
+  });
+}
+let cur = null;
+function show(app, row){
+  list.querySelectorAll(".on").forEach(n => n.classList.remove("on"));
+  row.classList.add("on");
+  if (cur === app) { pv.hot = true; return; }
+  cur = app; cap.textContent = app.name + " :: " + app.stack;
+  shotFor(app).then(c => { if (cur !== app) return; pv.setSource(c, true); pv.hot = true; });
+}
+APPS.forEach((a, i) => {
+  const li = document.createElement("li");
+  li.innerHTML = `<a class="row" href="${a.href}"><b></b><span class="tag ${a.status === "wip" ? "wip" : ""}">${a.status}</span><span class="meta"></span></a>`;
+  const row = li.firstChild;
+  row.querySelector("b").textContent = a.name;
+  row.querySelector(".meta").textContent = `${a.kind} / ${a.stack} / ${a.year}`;
+  row.addEventListener("pointerenter", () => show(a, row));
+  row.addEventListener("focus", () => show(a, row));
+  row.addEventListener("pointerleave", () => pv.hot = false);
+  row.addEventListener("blur", () => pv.hot = false);
+  list.appendChild(li);
+  if (i === 0) shotFor(a).then(c => { cur = a; cap.textContent = a.name + " :: " + a.stack; pv.setSource(c, true); });
+});
+</script>
+</body>
+</html>

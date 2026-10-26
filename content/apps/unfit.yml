@@ -1,0 +1,8 @@
+name: Unfit For Print
+kind: Web Game
+stack: Nuxt / Yjs / Redis / Postgres
+year: 2025
+status: live
+href: "https://unfit.cards"
+order: 2
+img: "https://github.com/PPO-GG/unfit-for-print/raw/main/.github/assets/main_menu.webp"

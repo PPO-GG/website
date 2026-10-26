@@ -1,0 +1,8 @@
+name: MODUS
+kind: Discord Bot
+stack: Nuxt / Discord.js / Node / Redis / Lavalink / Postgres
+year: 2026
+status: live
+href: "https://modusbot.io"
+order: 3
+img: "https://modusbot.io/screenshots/herodash.webp"

@@ -1,0 +1,7 @@
+name: Negotium
+kind: tool
+stack: Rust / cli / Slint
+year: 2026
+status: beta
+href: "https://github.com/MyndPhreak/Negotium"
+order: 4
