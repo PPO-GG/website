@@ -22,6 +22,15 @@ describe('mapApp', () => {
     expect(a.img).toBeUndefined()
     expect(a.description).toBeUndefined()
   })
+  it('passes an external imageUrl through when there is no imageId', () => {
+    expect(mapApp(appRow({ imageUrl: 'https://x.test/a.webp' }), url).img).toBe('https://x.test/a.webp')
+  })
+  it('prefers an uploaded image over an external imageUrl', () => {
+    expect(mapApp(appRow({ imageId: 'f9', imageUrl: 'https://x.test/a.webp' }), url).img).toBe('https://files.test/f9')
+  })
+  it('keeps beta as beta', () => {
+    expect(mapApp(appRow({ status: 'beta' }), url).status).toBe('beta')
+  })
   it('treats an unknown status as wip, never as live', () => {
     expect(mapApp(appRow({ status: 'archived' }), url).status).toBe('wip')
   })

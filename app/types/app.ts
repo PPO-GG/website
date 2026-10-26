@@ -1,4 +1,4 @@
-export const APP_STATUS = { Live: 'live', Wip: 'wip' } as const
+export const APP_STATUS = { Live: 'live', Beta: 'beta', Wip: 'wip' } as const
 
 export type AppStatus = (typeof APP_STATUS)[keyof typeof APP_STATUS]
 
@@ -26,6 +26,7 @@ export interface AppRow {
   order: number
   description?: string | null
   imageId?: string | null
+  imageUrl?: string | null
   published: boolean
 }
 
