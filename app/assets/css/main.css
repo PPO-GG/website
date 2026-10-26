@@ -8,7 +8,10 @@
 }
 * { box-sizing: border-box; margin: 0; }
 html { background: var(--blue); color: var(--ink); scroll-behavior: smooth; }
-body { font: 400 15px/1.6 var(--mono); min-height: 100vh; background: var(--blue) url("/assets/noise-texture.svg") repeat; }
+body { font: 400 15px/1.6 var(--mono); min-height: 100vh; background: var(--blue); }
+body::before { content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none; background: url("/assets/noise-texture.svg") repeat; animation: noise-in 2.6s ease-out both; }
+@keyframes noise-in { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { body::before { animation: none; } }
 a { color: inherit; }
 :focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
 .wrap { width: min(1280px, 100% - 32px); margin-inline: auto; }
@@ -28,7 +31,7 @@ a { color: inherit; }
 @keyframes blink { 50% { opacity: 0; } }
 
 /* apps */
-section { min-height: 100svh; padding: 72px 0; display: grid; position: relative; align-content: center; scroll-snap-align: start; }
+main > section { min-height: 100svh; padding: 72px 0; display: grid; position: relative; align-content: center; scroll-snap-align: start; }
 .apps { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 40px; align-items: start; }
 .list { list-style: none; padding: 0; }
 .row {
