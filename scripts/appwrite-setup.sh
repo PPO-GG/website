@@ -22,11 +22,12 @@ col create-string-column   --table-id apps --key name        --size 120 --requir
 col create-string-column   --table-id apps --key kind        --size 120 --required
 col create-string-column   --table-id apps --key stack       --size 60  --required=false --array
 col create-integer-column  --table-id apps --key year        --required
-col create-enum-column     --table-id apps --key status      --elements live --elements wip --required
+col create-enum-column     --table-id apps --key status      --elements live --elements beta --elements wip --required
 col create-string-column   --table-id apps --key href        --size 500 --required
 col create-integer-column  --table-id apps --key order       --required=false --xdefault 0
 col create-string-column   --table-id apps --key description --size 1000 --required=false
 col create-string-column   --table-id apps --key imageId     --size 36 --required=false
+col create-string-column   --table-id apps --key imageUrl    --size 500 --required=false
 col create-boolean-column  --table-id apps --key published   --required=false --xdefault false
 
 # posts

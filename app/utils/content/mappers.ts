@@ -8,7 +8,14 @@ function toStatus(s: string): AppStatus {
   return KNOWN_STATUS.includes(s) ? (s as AppStatus) : APP_STATUS.Wip
 }
 
-export function mapApp(row: AppRow, imageUrl: (fileId: string) => string): AppEntry {
+// An uploaded file wins over an external URL.
+function pickImage(row: AppRow, fileUrl: (fileId: string) => string): string | undefined {
+  if (row.imageId) return fileUrl(row.imageId)
+  return row.imageUrl || undefined
+}
+
+export function mapApp(row: AppRow, fileUrl: (fileId: string) => string): AppEntry {
+  const img = pickImage(row, fileUrl)
   return {
     id: row.$id,
     name: row.name,
@@ -18,7 +25,7 @@ export function mapApp(row: AppRow, imageUrl: (fileId: string) => string): AppEn
     status: toStatus(row.status),
     href: row.href,
     order: row.order,
-    ...(row.imageId ? { img: imageUrl(row.imageId) } : {}),
+    ...(img ? { img } : {}),
     ...(row.description ? { description: row.description } : {}),
   }
 }
