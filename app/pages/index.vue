@@ -28,10 +28,10 @@ useSeoMeta({
       <div class="wrap">
         <p class="eyebrow">What we do</p>
         <h2 id="services-h" class="section-title">Services</h2>
-        <p class="lead">Engineering and design for organizations that need software to be reliable, fast and a pleasure to use.</p>
+        <p class="lead">Engineering, design and intelligence tooling for organizations that need software to be reliable, fast and decisive.</p>
         <ul class="cards">
           <li v-for="(s, i) in SERVICES" :key="s.id" class="card">
-            <span class="num">{{ String(i + 1).padStart(2, '0') }}</span>
+            <span class="num">SVC-{{ String(i + 1).padStart(2, '0') }}</span>
             <h3>{{ s.title }}</h3>
             <p>{{ s.summary }}</p>
             <NuxtLink class="more" :to="`/services#${s.id}`">Learn more</NuxtLink>

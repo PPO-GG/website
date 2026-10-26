@@ -2,14 +2,17 @@ export const SITE = {
   name: 'PPO',
   domain: 'ppo.gg',
   email: 'hello@ppo.gg',
+  /** Shown in the status strip above the header. */
+  banner: 'OPEN SOURCE // UNCLASSIFIED',
 } as const
 
 /** Lines the hero cycles through. Slow on purpose: each one is held long enough to read twice. */
 export const TAGLINES: readonly string[] = [
   'Building the future, one system at a time.',
+  'Signal from noise.',
+  'Open data in. Decisions out.',
   'Software that is powerful, beautiful and fast.',
   'Advanced engineering. Zero friction.',
-  'We make complex things simple to run.',
 ]
 
 export interface Service {
@@ -45,16 +48,16 @@ export const SERVICES: readonly Service[] = [
     points: ['Code and architecture review', 'Incremental migration plans', 'Performance and cost optimization', 'Test coverage and refactoring'],
   },
   {
-    id: 'automation',
-    title: 'Automation & Applied AI',
-    summary: 'Remove repetitive work and put modern AI to use where it measurably helps.',
-    points: ['Workflow and process automation', 'AI-assisted tools and agents', 'Data pipelines and reporting', 'Evaluation and safe rollout'],
+    id: 'intelligence',
+    title: 'Intelligence & OSINT Platforms',
+    summary: 'Tooling that turns open-source data into analysis: collect, correlate and brief faster.',
+    points: ['Collection and data-fusion pipelines', 'Entity extraction and link analysis', 'Geospatial and timeline dashboards', 'AI-assisted triage with human review'],
   },
   {
     id: 'advisory',
     title: 'Technical Advisory',
     summary: 'Senior technical leadership for teams that need direction, not just hands.',
-    points: ['Fractional CTO engagements', 'Technology and vendor selection', 'Security and reliability reviews', 'Hiring and team coaching'],
+    points: ['Fractional CTO engagements', 'Technology and vendor selection', 'Security and reliability reviews', 'Workflow automation and coaching'],
   },
 ]
 

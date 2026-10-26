@@ -21,7 +21,7 @@ useSeoMeta({
       <div class="wrap">
         <article v-for="(s, i) in SERVICES" :id="s.id" :key="s.id" class="service">
           <div>
-            <span class="num">{{ String(i + 1).padStart(2, '0') }}</span>
+            <span class="num">SVC-{{ String(i + 1).padStart(2, '0') }}</span>
             <h2>{{ s.title }}</h2>
             <p>{{ s.summary }}</p>
           </div>

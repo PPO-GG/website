@@ -9,12 +9,27 @@ const NAV = [
 ]
 
 const open = ref(false)
+const clock = ref('')
+let tick: ReturnType<typeof setInterval> | undefined
+const stamp = () => (clock.value = new Date().toISOString().slice(11, 19))
+onMounted(() => {
+  stamp()
+  tick = setInterval(stamp, 1000)
+})
+onBeforeUnmount(() => clearInterval(tick))
 const route = useRoute()
 watch(() => route.fullPath, () => (open.value = false))
 </script>
 
 <template>
   <header class="site-header" :class="{ open }">
+    <div class="strip">
+      <div class="wrap">
+        <span>{{ SITE.banner }}</span>
+        <span class="sys"><i aria-hidden="true" />SYS ONLINE</span>
+        <span class="utc">{{ clock ? `UTC ${clock}` : '' }}</span>
+      </div>
+    </div>
     <div class="wrap bar">
       <NuxtLink to="/" class="brand" aria-label="PPO home">{{ SITE.name }}<span>.gg</span></NuxtLink>
       <button type="button" class="burger" :aria-expanded="open" aria-controls="site-nav" aria-label="Menu" @click="open = !open">
