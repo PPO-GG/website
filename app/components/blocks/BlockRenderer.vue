@@ -1,8 +1,18 @@
 <script setup lang="ts">
 import type { Block } from '~/types/blocks'
-import { isExternal, safeLink, safeSrc } from '~/utils/content/blocks'
+import { isExternal, safeLink, safeSrc, toLines } from '~/utils/content/blocks'
+import { slugify } from '~/utils/content/slug'
 
 defineProps<{ blocks: Block[] }>()
+
+const content = useContent()
+const { data: loaded } = await useAsyncData('apps', () => content.apps())
+const apps = computed(() => loaded.value?.data ?? [])
+const appsFailed = computed(() => loaded.value?.failed ?? false)
+
+const down = () => window.scrollTo({ top: window.innerHeight, behavior: 'smooth' })
+const anchorOf = (b: Block) => b.data.anchor || undefined
+const moreLink = (base: string | undefined, title: string) => (base ? `${safeLink(base)}#${slugify(title)}` : '')
 
 const attrs = (href: string) => {
   const h = safeLink(href)
@@ -63,7 +73,7 @@ const attrs = (href: string) => {
         </figure>
       </section>
 
-      <section v-else-if="b.type === 'cta'" class="blk">
+      <section v-else-if="b.type === 'cta'" :id="anchorOf(b)" :class="b.data.anchor ? 'section' : 'blk'">
         <div class="wrap">
           <div class="cta">
             <div>
@@ -72,6 +82,67 @@ const attrs = (href: string) => {
             </div>
             <a class="btn primary" v-bind="attrs(b.data.ctaHref ?? '')">{{ b.data.ctaLabel }}</a>
           </div>
+        </div>
+      </section>
+
+      <div v-else-if="b.type === 'pixelhero'" id="top" class="hero">
+        <ClientOnly><GlobeBackground /></ClientOnly>
+        <ClientOnly>
+          <PixelLogo />
+          <template #fallback><div class="logo" /></template>
+        </ClientOnly>
+        <RotatingLine :lines="toLines(b.data.taglines)" />
+        <button type="button" class="scroll-cue" aria-label="Scroll down" @click="down">Scroll</button>
+      </div>
+
+      <section v-else-if="b.type === 'services'" :id="anchorOf(b)" class="section" :class="{ plain: !b.data.anchor }">
+        <div class="wrap">
+          <p v-if="b.data.eyebrow" class="eyebrow">{{ b.data.eyebrow }}</p>
+          <h2 v-if="b.data.heading" class="section-title">{{ b.data.heading }}</h2>
+          <p v-if="b.data.intro" class="lead">{{ b.data.intro }}</p>
+          <ul v-if="b.data.layout !== 'detailed'" class="cards">
+            <li v-for="(it, i) in b.items" :key="i" class="card">
+              <span class="num">SVC-{{ String(i + 1).padStart(2, '0') }}</span>
+              <h3>{{ it.title }}</h3>
+              <p v-if="it.summary">{{ it.summary }}</p>
+              <NuxtLink v-if="b.data.moreHref" class="more" :to="moreLink(b.data.moreHref, it.title ?? '')">Learn more</NuxtLink>
+            </li>
+          </ul>
+          <div v-else class="detail">
+            <article v-for="(it, i) in b.items" :id="slugify(it.title ?? '')" :key="i" class="service">
+              <div>
+                <span class="num">SVC-{{ String(i + 1).padStart(2, '0') }}</span>
+                <h2>{{ it.title }}</h2>
+                <p v-if="it.summary">{{ it.summary }}</p>
+              </div>
+              <ul class="ticks">
+                <li v-for="p in toLines(it.points)" :key="p">{{ p }}</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section v-else-if="b.type === 'steps'" :id="anchorOf(b)" class="section">
+        <div class="wrap">
+          <p v-if="b.data.eyebrow" class="eyebrow">{{ b.data.eyebrow }}</p>
+          <h2 v-if="b.data.heading" class="section-title">{{ b.data.heading }}</h2>
+          <ol class="steps">
+            <li v-for="(it, i) in b.items" :key="i">
+              <span class="num">{{ String(i + 1).padStart(2, '0') }}</span>
+              <h3>{{ it.title }}</h3>
+              <p v-if="it.text">{{ it.text }}</p>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <section v-else-if="b.type === 'work'" :id="anchorOf(b)" class="section">
+        <div class="wrap">
+          <p v-if="b.data.eyebrow" class="eyebrow">{{ b.data.eyebrow }}</p>
+          <h2 v-if="b.data.heading" class="section-title">{{ b.data.heading }}</h2>
+          <p v-if="appsFailed" class="notice">Projects could not load. Reload the page in a minute.</p>
+          <AppList v-else :apps="apps" />
         </div>
       </section>
     </template>

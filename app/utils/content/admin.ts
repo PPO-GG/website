@@ -3,7 +3,7 @@ import type { AppRow, AppStatus, PageRow, PostRow } from '~/types/app'
 import type { Block } from '~/types/blocks'
 import { BLOCK_TYPE } from '~/types/blocks'
 import { blankBlock, parseBody, serializeBlocks, validateBlocks } from '~/utils/content/blocks'
-import { isValidSlug } from '~/utils/content/slug'
+import { isSystemSlug, isValidSlug } from '~/utils/content/slug'
 
 export interface AppForm {
   name: string
@@ -105,7 +105,7 @@ export function validatePost(f: PostForm): string[] {
 export function validatePage(f: PageForm): string[] {
   const errors: string[] = []
   if (!f.title.trim()) errors.push('Enter a title.')
-  if (!isValidSlug(f.slug.trim())) errors.push(SLUG_HELP)
+  if (!isValidSlug(f.slug.trim()) && !isSystemSlug(f.slug.trim())) errors.push(SLUG_HELP)
   if (f.mode === 'blocks') errors.push(...validateBlocks(f.blocks))
   else if (!f.body.trim()) errors.push('Write the body text.')
   return errors

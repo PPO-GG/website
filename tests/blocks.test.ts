@@ -72,3 +72,48 @@ describe('page forms in builder mode', () => {
     expect(back.blocks[0]?.data.body).toBe('Hello')
   })
 })
+
+import { defaultHome, defaultServices } from '~/data/defaults'
+import { defaultSettings, parseSettings, serializeSettings, validateSettings } from '~/utils/content/site'
+import { isSystemSlug, isValidSlug } from '~/utils/content/slug'
+import { toLines } from '~/utils/content/blocks'
+
+describe('built-in pages', () => {
+  it('pass their own validation and survive a save and reload', () => {
+    for (const blocks of [defaultHome(), defaultServices()]) {
+      expect(validateBlocks(blocks)).toEqual([])
+      const back = parseBody(serializeBlocks(blocks))
+      expect(back.kind === 'blocks' && back.blocks.map((b) => b.type)).toEqual(blocks.map((b) => b.type))
+    }
+  })
+  it('validates a system slug as a page but does not allow it as a normal slug', () => {
+    const form = { ...blankPage(), title: 'Home', slug: 'home', blocks: defaultHome() }
+    expect(validatePage(form)).toEqual([])
+    expect(isSystemSlug('home')).toBe(true)
+    expect(isValidSlug('home')).toBe(false)
+    expect(isValidSlug('site-settings')).toBe(false)
+  })
+  it('rejects a bad anchor', () => {
+    const b = blankBlock(BLOCK_TYPE.Work)
+    b.data.anchor = 'Bad Anchor'
+    expect(validateBlocks([b])).toHaveLength(1)
+  })
+  it('splits lines', () => {
+    expect(toLines(' a \n\n b')).toEqual(['a', 'b'])
+  })
+})
+
+describe('site settings', () => {
+  it('falls back to defaults for missing or broken data', () => {
+    expect(parseSettings(undefined)).toEqual(defaultSettings())
+    expect(parseSettings('nope')).toEqual(defaultSettings())
+  })
+  it('round-trips and drops blank menu rows', () => {
+    const s = { ...defaultSettings(), nav: [{ label: 'A', to: '/a' }, { label: '', to: '' }] }
+    expect(parseSettings(serializeSettings(s)).nav).toEqual([{ label: 'A', to: '/a' }])
+  })
+  it('rejects a bad email and a script link', () => {
+    const s = { ...defaultSettings(), email: 'x', nav: [{ label: 'A', to: 'javascript:1' }] }
+    expect(validateSettings(s)).toHaveLength(2)
+  })
+})

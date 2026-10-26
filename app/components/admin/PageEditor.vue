@@ -4,10 +4,11 @@ import { markdownToBlocks } from '~/utils/content/admin'
 import { slugify } from '~/utils/content/slug'
 
 const form = defineModel<PageForm>({ required: true })
+const props = defineProps<{ lockSlug?: boolean }>()
 
 const slugTouched = ref(form.value.slug !== '')
 watch(() => form.value.title, (t) => {
-  if (!slugTouched.value) form.value.slug = slugify(t)
+  if (!slugTouched.value && !props.lockSlug) form.value.slug = slugify(t)
 })
 
 // Markdown moves into the builder as one text block. The other way is not offered: it would lose layout.
@@ -22,7 +23,7 @@ function useBuilder() {
     <div class="field wide"><label for="g-title">Title</label><input id="g-title" v-model="form.title" type="text" maxlength="200"></div>
     <div class="field wide">
       <label for="g-slug">Slug</label>
-      <input id="g-slug" v-model="form.slug" type="text" maxlength="80" @input="slugTouched = true">
+      <input id="g-slug" v-model="form.slug" type="text" maxlength="80" :readonly="lockSlug" @input="slugTouched = true">
       <small>The link is /{{ form.slug || 'slug' }}</small>
     </div>
     <div v-if="form.mode === 'blocks'" class="field wide"><AdminPageBuilder v-model="form.blocks" /></div>

@@ -1,5 +1,5 @@
 import { BLOCK_TYPE } from '~/types/blocks'
-import type { Block, BlockDef, BlockType } from '~/types/blocks'
+import type { Block, BlockDef, BlockType, FieldDef } from '~/types/blocks'
 
 export const BLOCK_DEFS: readonly BlockDef[] = [
   {
@@ -68,6 +68,57 @@ export const BLOCK_DEFS: readonly BlockDef[] = [
       { key: 'text', label: 'Text', kind: 'textarea' },
       { key: 'ctaLabel', label: 'Button text', kind: 'text', required: true },
       { key: 'ctaHref', label: 'Button link', kind: 'link', required: true },
+      { key: 'anchor', label: 'Anchor (for links like /#work)', kind: 'anchor', hint: 'Lowercase letters, numbers and dashes. Leave empty for none.' },
+    ],
+  },
+  {
+    type: BLOCK_TYPE.PixelHero,
+    label: 'Pixel logo hero (home)',
+    hint: 'The full-screen pixel logo and globe with rotating lines.',
+    fields: [{ key: 'taglines', label: 'Rotating lines', kind: 'textarea', hint: 'One line per row. Each is shown for about five seconds.' }],
+  },
+  {
+    type: BLOCK_TYPE.Services,
+    label: 'Services',
+    hint: 'Service cards, or a detailed list with bullet points.',
+    fields: [
+      { key: 'eyebrow', label: 'Small label above', kind: 'text' },
+      { key: 'heading', label: 'Heading', kind: 'text' },
+      { key: 'intro', label: 'Intro', kind: 'textarea' },
+      { key: 'layout', label: 'Layout', kind: 'select', options: [{ value: 'cards', label: 'Cards' }, { value: 'detailed', label: 'Detailed list' }] },
+      { key: 'moreHref', label: 'Card "Learn more" link', kind: 'link', hint: 'Cards link to this page plus #service-name. Leave empty for no link.' },
+      { key: 'anchor', label: 'Anchor (for links like /#work)', kind: 'anchor', hint: 'Lowercase letters, numbers and dashes. Leave empty for none.' },
+    ],
+    itemLabel: 'Service',
+    itemFields: [
+      { key: 'title', label: 'Title', kind: 'text', required: true },
+      { key: 'summary', label: 'Summary', kind: 'textarea' },
+      { key: 'points', label: 'Bullet points', kind: 'textarea', hint: 'One per line. Shown in the detailed list.' },
+    ],
+  },
+  {
+    type: BLOCK_TYPE.Steps,
+    label: 'Process steps',
+    hint: 'Numbered phases, such as how you work.',
+    fields: [
+      { key: 'eyebrow', label: 'Small label above', kind: 'text' },
+      { key: 'heading', label: 'Heading', kind: 'text' },
+      { key: 'anchor', label: 'Anchor (for links like /#work)', kind: 'anchor', hint: 'Lowercase letters, numbers and dashes. Leave empty for none.' },
+    ],
+    itemLabel: 'Step',
+    itemFields: [
+      { key: 'title', label: 'Title', kind: 'text', required: true },
+      { key: 'text', label: 'Text', kind: 'textarea' },
+    ],
+  },
+  {
+    type: BLOCK_TYPE.Work,
+    label: 'Project list',
+    hint: 'Your published projects from the Projects tab.',
+    fields: [
+      { key: 'eyebrow', label: 'Small label above', kind: 'text' },
+      { key: 'heading', label: 'Heading', kind: 'text' },
+      { key: 'anchor', label: 'Anchor (for links like /#work)', kind: 'anchor', hint: 'Lowercase letters, numbers and dashes. Leave empty for none.' },
     ],
   },
 ]
@@ -78,6 +129,7 @@ const KNOWN_TYPES: readonly string[] = BLOCK_DEFS.map((d) => d.type)
 export const BLOCKS_MAX = 40
 export const ITEMS_MAX = 12
 const FORMAT_VERSION = 1
+const ANCHOR_OK = /^[a-z][a-z0-9-]{0,39}$/
 const LINK_OK = /^(#|\/(?!\/)|https?:\/\/|mailto:)/i
 const SRC_OK = /^(\/(?!\/)|https?:\/\/)/i
 
@@ -86,7 +138,7 @@ export const blockDef = (t: BlockType): BlockDef => DEFS.get(t)!
 let counter = 0
 const newId = () => `b${Date.now().toString(36)}${(counter++).toString(36)}`
 
-const emptyRow = (fields: { key: string }[]): Record<string, string> => Object.fromEntries(fields.map((f) => [f.key, '']))
+const emptyRow = (fields: FieldDef[]): Record<string, string> => Object.fromEntries(fields.map((f) => [f.key, f.options?.[0]?.value ?? '']))
 
 export function blankItem(type: BlockType): Record<string, string> {
   return emptyRow(blockDef(type).itemFields ?? [])
@@ -102,6 +154,9 @@ export function safeLink(href: string | undefined): string {
   const h = (href ?? '').trim()
   return LINK_OK.test(h) ? h : '#'
 }
+
+/** Splits a textarea into trimmed, non-empty lines. */
+export const toLines = (s: string | undefined): string[] => (s ?? '').split('\n').map((l) => l.trim()).filter(Boolean)
 
 export const isExternal = (href: string) => /^https?:\/\//i.test(href)
 
@@ -156,6 +211,8 @@ export function validateBlocks(blocks: Block[]): string[] {
       const v = (b.data[f.key] ?? '').trim()
       if (f.required && !v) errors.push(`${where}: fill in "${f.label}".`)
       else if (v && f.kind === 'link' && !LINK_OK.test(v)) errors.push(`${where}: "${f.label}" must start with https://, /, # or mailto:.`)
+      else if (v && f.kind === 'anchor' && !ANCHOR_OK.test(v)) errors.push(`${where}: "${f.label}" can use only lowercase letters, numbers and dashes.`)
+      else if (v && f.kind === 'select' && !f.options?.some((o) => o.value === v)) errors.push(`${where}: choose a value for "${f.label}".`)
       else if (v && f.kind === 'image' && !SRC_OK.test(v)) errors.push(`${where}: "${f.label}" must be an https:// or / address.`)
     }
     if (b.items.length > ITEMS_MAX) errors.push(`${where}: use at most ${ITEMS_MAX} rows.`)

@@ -16,7 +16,6 @@ export const TAGLINES: readonly string[] = [
 ]
 
 export interface Service {
-  id: string
   title: string
   summary: string
   points: string[]
@@ -24,37 +23,31 @@ export interface Service {
 
 export const SERVICES: readonly Service[] = [
   {
-    id: 'web-applications',
     title: 'Custom Web Applications',
     summary: 'Production-grade web apps, from first prototype to a platform your team relies on every day.',
     points: ['Product design and architecture', 'Real-time and collaborative features', 'Accessible, responsive front ends', 'Delivery in short, reviewable iterations'],
   },
   {
-    id: 'platform-engineering',
     title: 'Platform & Systems Engineering',
     summary: 'APIs, services and cloud infrastructure built to scale and to stay maintainable.',
     points: ['API and service design', 'Cloud architecture and deployment', 'CI/CD and observability', 'Integration with existing systems'],
   },
   {
-    id: 'design',
     title: 'Interface & Brand Design',
     summary: 'Interfaces that are clear, fast to learn and unmistakably yours.',
     points: ['UX research and flows', 'Design systems and component libraries', 'Brand and visual identity', 'Prototyping and usability testing'],
   },
   {
-    id: 'modernization',
     title: 'Modernization & Performance',
     summary: 'Move legacy software forward without stopping the business that depends on it.',
     points: ['Code and architecture review', 'Incremental migration plans', 'Performance and cost optimization', 'Test coverage and refactoring'],
   },
   {
-    id: 'intelligence',
     title: 'Intelligence & OSINT Platforms',
     summary: 'Tooling that turns open-source data into analysis: collect, correlate and brief faster.',
     points: ['Collection and data-fusion pipelines', 'Entity extraction and link analysis', 'Geospatial and timeline dashboards', 'AI-assisted triage with human review'],
   },
   {
-    id: 'advisory',
     title: 'Technical Advisory',
     summary: 'Senior technical leadership for teams that need direction, not just hands.',
     points: ['Fractional CTO engagements', 'Technology and vendor selection', 'Security and reliability reviews', 'Workflow automation and coaching'],

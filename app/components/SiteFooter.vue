@@ -1,5 +1,10 @@
 <script setup lang="ts">
-import { SERVICES, SITE } from '~/data/site'
+import { SITE } from '~/data/site'
+import type { SiteSettings } from '~/utils/content/site'
+import { navAttrs } from '~/utils/content/site'
+import { slugify } from '~/utils/content/slug'
+
+defineProps<{ settings: SiteSettings; services: string[] }>()
 </script>
 
 <template>
@@ -7,19 +12,16 @@ import { SERVICES, SITE } from '~/data/site'
     <div class="wrap cols">
       <div>
         <p class="brand">{{ SITE.name }}<span>.gg</span></p>
-        <p class="blurb">Software, web and platform engineering for organizations that need it to work.</p>
-        <p><a :href="`mailto:${SITE.email}`">{{ SITE.email }}</a></p>
+        <p class="blurb">{{ settings.blurb }}</p>
+        <p><a :href="`mailto:${settings.email}`">{{ settings.email }}</a></p>
       </div>
       <nav aria-label="Services">
         <h2>Services</h2>
-        <NuxtLink v-for="s in SERVICES" :key="s.id" :to="`/services#${s.id}`">{{ s.title }}</NuxtLink>
+        <NuxtLink v-for="s in services" :key="s" :to="`/services#${slugify(s)}`">{{ s }}</NuxtLink>
       </nav>
       <nav aria-label="Company">
         <h2>Company</h2>
-        <NuxtLink to="/#work">Work</NuxtLink>
-        <NuxtLink to="/#approach">Approach</NuxtLink>
-        <NuxtLink to="/blog">Blog</NuxtLink>
-        <NuxtLink to="/#contact">Contact</NuxtLink>
+        <NuxtLink v-for="n in settings.nav" :key="n.to + n.label" :to="navAttrs(n.to).to" :external="navAttrs(n.to).external">{{ n.label }}</NuxtLink>
       </nav>
     </div>
     <div class="wrap legal">
