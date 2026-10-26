@@ -1,2 +1,9 @@
 allowBuilds:
-  esbuild: set this to true or false
+  esbuild: false
+overrides:
+  # Newest releases are inside the supply-chain age window; pin the newest ones outside it.
+  baseline-browser-mapping: 2.11.32
+  hast-util-to-text: 4.0.2
+  unplugin: 3.4.0
+  # magic-string 1.x breaks @vue/compiler-sfc's CommonJS import ("MagicString is not a constructor").
+  "@vue/compiler-sfc>magic-string": 0.30.21

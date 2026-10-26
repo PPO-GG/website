@@ -32,7 +32,7 @@ function wireframe(name: string): HTMLCanvasElement {
 
 /** Screenshot canvas for an app: its `img` if it loads, else the wireframe. */
 export async function shotFor(app: AppEntry): Promise<HTMLCanvasElement> {
-  const hit = cache.get(app.name)
+  const hit = cache.get(app.id)
   if (hit) return hit
   let out: HTMLCanvasElement | undefined
   const imgSrc = app.img
@@ -49,6 +49,6 @@ export async function shotFor(app: AppEntry): Promise<HTMLCanvasElement> {
     })
   }
   out ??= wireframe(app.name)
-  cache.set(app.name, out)
+  cache.set(app.id, out)
   return out
 }

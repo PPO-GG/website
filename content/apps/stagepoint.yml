@@ -1,8 +1,0 @@
-name: Rundown by Stagepoint
-kind: Broadcasting Application
-stack: Nuxt / Yjs / Appwrite / R2
-year: 2026
-status: live
-href: "https://stagepoint.io"
-order: 1
-img: /shots/stagepoint.png

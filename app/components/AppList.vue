@@ -18,7 +18,7 @@ onBeforeUnmount(() => pix?.destroy())
 
 async function show(app: AppEntry, hot: boolean) {
   if (!pix) return
-  if (active.value?.name === app.name) {
+  if (active.value?.id === app.id) {
     pix.hot = hot
     return
   }
@@ -35,6 +35,8 @@ function hostOf(href: string, fallback: string): string {
     return fallback // placeholder links like "#"
   }
 }
+const isExternal = (href: string) => /^https?:\/\//.test(href)
+
 function release() {
   if (pix) pix.hot = false
 }
@@ -43,22 +45,22 @@ function release() {
 <template>
   <div class="apps">
     <ul class="list">
-      <li v-for="a in apps" :key="a.name">
+      <li v-for="a in apps" :key="a.id">
         <a
           class="row"
-          :class="{ on: active?.name === a.name }"
-          :href="a.href"
+          :class="{ on: active?.id === a.id }"
+          :href="a.href" :target="isExternal(a.href) ? '_blank' : undefined" :rel="isExternal(a.href) ? 'noopener' : undefined"
           @pointerenter="show(a, true)"
           @focus="show(a, true)"
           @pointerleave="release"
           @blur="release"
         >
           <b>{{ a.name }}</b>
-          <span class="tag" :class="{ wip: a.status === 'wip' }">{{ a.status }}</span>
+          <span class="tag" :class="a.status">{{ a.status }}</span>
           <span class="meta">{{ a.kind }} / {{ a.year }}</span>
           <span v-if="a.description" class="desc">{{ a.description }}</span>
           <span class="chips">
-            <span v-for="s in a.stack.split('/')" :key="s" class="chip">{{ s.trim() }}</span>
+            <span v-for="s in a.stack" :key="s" class="chip">{{ s.trim() }}</span>
           </span>
         </a>
       </li>

@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { AppEntry } from '~/types/app'
-
-const { data: apps } = await useAsyncData('apps', () => queryCollection('apps').order('order', 'ASC').all())
-const list = computed<AppEntry[]>(() => apps.value ?? [])
+const content = useContent()
+const { data: loaded } = await useAsyncData('apps', () => content.apps())
+const list = computed(() => loaded.value?.data ?? [])
+const failed = computed(() => loaded.value?.failed ?? false)
 
 // The home page is a stack of full-screen pages with no scrollbar.
 useHead({ htmlAttrs: { class: 'paged' } })
@@ -26,7 +26,8 @@ const PAGES = [
       </div>
 
       <section id="work" aria-label="Apps">
-        <AppList :apps="list" />
+        <p v-if="failed" class="notice">Projects could not load. Reload the page in a minute.</p>
+        <AppList v-else :apps="list" />
         <footer>
           <span>ppo.gg &copy; 2026</span>
           <span>
