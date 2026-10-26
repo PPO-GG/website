@@ -1,4 +1,6 @@
+import { APP_STATUS } from '~/types/app'
 import type { AppRow, AppStatus, PageRow, PostRow } from '~/types/app'
+import { isValidSlug } from '~/utils/content/slug'
 
 export interface AppForm {
   name: string
@@ -35,62 +37,137 @@ export const YEAR_MIN = 1990
 export const YEAR_MAX = 2100
 export const STACK_MAX = 12
 
-export function rowPermissions(_published: boolean): string[] {
-  return ['stub']
+const HREF_OK = /^(#|\/|https?:\/\/)/
+const DATE_SHAPE = /^\d{4}-\d{2}-\d{2}$/
+const SLUG_HELP = 'Use only lowercase letters, numbers and single dashes in the slug. Do not use a reserved word.'
+const KNOWN_STATUS: readonly string[] = Object.values(APP_STATUS)
+
+const orNull = (s: string): string | null => s.trim() || null
+
+function isRealDate(d: string): boolean {
+  if (!DATE_SHAPE.test(d)) return false
+  const t = new Date(`${d}T00:00:00.000Z`)
+  return !Number.isNaN(t.getTime()) && t.toISOString().startsWith(d)
 }
 
-export function parseStack(_text: string): string[] {
-  return ['stub']
+/** Read access for guests is the whole publish switch: Appwrite hides rows without it. */
+export function rowPermissions(published: boolean): string[] {
+  return published ? ['read("any")'] : []
 }
 
-export function formatStack(_stack: string[]): string {
-  return 'stub'
+export function parseStack(text: string): string[] {
+  const seen = new Set<string>()
+  const out: string[] = []
+  for (const part of text.split(/[,/]/)) {
+    const t = part.trim()
+    const key = t.toLowerCase()
+    if (!t || seen.has(key)) continue
+    seen.add(key)
+    out.push(t)
+    if (out.length === STACK_MAX) break
+  }
+  return out
 }
 
-export function validateApp(_f: AppForm): string[] {
-  return []
+export function formatStack(stack: string[]): string {
+  return stack.join(', ')
 }
 
-export function validatePost(_f: PostForm): string[] {
-  return []
+export function validateApp(f: AppForm): string[] {
+  const errors: string[] = []
+  if (!f.name.trim()) errors.push('Enter a name.')
+  if (!f.kind.trim()) errors.push('Enter a kind, for example Web app.')
+  if (!HREF_OK.test(f.href.trim())) errors.push('Use a link that starts with https://, or use #.')
+  if (!Number.isInteger(f.year) || f.year < YEAR_MIN || f.year > YEAR_MAX) {
+    errors.push(`Use a year from ${YEAR_MIN} to ${YEAR_MAX}.`)
+  }
+  return errors
 }
 
-export function validatePage(_f: PageForm): string[] {
-  return []
+export function validatePost(f: PostForm): string[] {
+  const errors: string[] = []
+  if (!f.title.trim()) errors.push('Enter a title.')
+  if (!isValidSlug(f.slug.trim())) errors.push(SLUG_HELP)
+  if (!f.body.trim()) errors.push('Write the body text.')
+  if (!isRealDate(f.date)) errors.push('Use a date in the format YYYY-MM-DD.')
+  return errors
 }
 
-export function toAppData(_f: AppForm): Record<string, unknown> {
-  return {}
+export function validatePage(f: PageForm): string[] {
+  const errors: string[] = []
+  if (!f.title.trim()) errors.push('Enter a title.')
+  if (!isValidSlug(f.slug.trim())) errors.push(SLUG_HELP)
+  if (!f.body.trim()) errors.push('Write the body text.')
+  return errors
 }
 
-export function toPostData(_f: PostForm): Record<string, unknown> {
-  return {}
+export function toAppData(f: AppForm): Record<string, unknown> {
+  return {
+    name: f.name.trim(),
+    kind: f.kind.trim(),
+    stack: parseStack(f.stackText),
+    year: f.year,
+    status: f.status,
+    href: f.href.trim(),
+    order: f.order,
+    description: orNull(f.description),
+    imageId: orNull(f.imageId),
+    imageUrl: orNull(f.imageUrl),
+    published: f.published,
+  }
 }
 
-export function toPageData(_f: PageForm): Record<string, unknown> {
-  return {}
+export function toPostData(f: PostForm): Record<string, unknown> {
+  return {
+    title: f.title.trim(),
+    slug: f.slug.trim(),
+    description: orNull(f.description),
+    body: f.body,
+    publishedAt: `${f.date}T00:00:00.000+00:00`,
+    published: f.published,
+  }
 }
 
-export function blankApp(): AppForm {
-  return { name: '', kind: '', stackText: '', year: 0, status: 'live', href: '', order: 0, description: '', imageId: '', imageUrl: '', published: true }
+export function toPageData(f: PageForm): Record<string, unknown> {
+  return { title: f.title.trim(), slug: f.slug.trim(), body: f.body, published: f.published }
 }
 
-export function blankPost(_today: string): PostForm {
-  return { title: '', slug: '', description: '', body: '', date: '', published: true }
+export const blankApp = (): AppForm => ({
+  name: '', kind: '', stackText: '', year: new Date().getFullYear(), status: APP_STATUS.Live, href: '', order: 0,
+  description: '', imageId: '', imageUrl: '', published: false,
+})
+
+export const blankPost = (today: string): PostForm => ({ title: '', slug: '', description: '', body: '', date: today, published: false })
+
+export const blankPage = (): PageForm => ({ title: '', slug: '', body: '', published: false })
+
+export function appToForm(row: AppRow): AppForm {
+  return {
+    name: row.name,
+    kind: row.kind,
+    stackText: formatStack(row.stack ?? []),
+    year: row.year,
+    status: (KNOWN_STATUS.includes(row.status) ? row.status : APP_STATUS.Wip) as AppStatus,
+    href: row.href,
+    order: row.order ?? 0,
+    description: row.description ?? '',
+    imageId: row.imageId ?? '',
+    imageUrl: row.imageUrl ?? '',
+    published: row.published,
+  }
 }
 
-export function blankPage(): PageForm {
-  return { title: '', slug: '', body: '', published: true }
+export function postToForm(row: PostRow): PostForm {
+  return {
+    title: row.title,
+    slug: row.slug,
+    description: row.description ?? '',
+    body: row.body,
+    date: row.publishedAt.slice(0, 10),
+    published: row.published,
+  }
 }
 
-export function appToForm(_row: AppRow): AppForm {
-  throw new Error('not implemented')
-}
-
-export function postToForm(_row: PostRow): PostForm {
-  throw new Error('not implemented')
-}
-
-export function pageToForm(_row: PageRow): PageForm {
-  throw new Error('not implemented')
+export function pageToForm(row: PageRow): PageForm {
+  return { title: row.title, slug: row.slug, body: row.body, published: row.published }
 }
