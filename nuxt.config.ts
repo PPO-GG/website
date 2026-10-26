@@ -14,9 +14,11 @@ export default defineNuxtConfig({
     },
   },
   routeRules: {
-    // Public pages re-render at most once a minute, so edits show up quickly without a hit per visit.
-    '/': { swr: 60 },
-    '/blog/**': { swr: 60 },
+    // Public pages are cached for 30 seconds. swr is off on purpose: with swr the first visit after
+    // an edit still gets the old page, so a change looked like it had not saved.
+    '/': { cache: { maxAge: 30, swr: false } },
+    '/_payload.json': { cache: { maxAge: 30, swr: false } },
+    '/blog/**': { cache: { maxAge: 30, swr: false } },
     '/admin/**': { ssr: false },
   },
   app: {

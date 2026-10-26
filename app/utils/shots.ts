@@ -40,8 +40,12 @@ export async function shotFor(app: AppEntry): Promise<HTMLCanvasElement> {
     out = await new Promise<HTMLCanvasElement | undefined>((resolve) => {
       const im = new Image()
       im.onload = () => {
+        // Crop to fill the 8:5 frame instead of stretching a tall or wide image.
         const c = makeCanvas(SHOT_W, SHOT_H)
-        c.getContext('2d')?.drawImage(im, 0, 0, SHOT_W, SHOT_H)
+        const s = Math.max(SHOT_W / im.naturalWidth, SHOT_H / im.naturalHeight)
+        const w = im.naturalWidth * s
+        const h = im.naturalHeight * s
+        c.getContext('2d')?.drawImage(im, (SHOT_W - w) / 2, 0, w, h)
         resolve(c)
       }
       im.onerror = () => resolve(undefined)
