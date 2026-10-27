@@ -1,14 +1,17 @@
 <script setup lang="ts">
-import { defaultServices } from '~/data/defaults'
+import { defaultServices } from "~/data/defaults";
 
-const route = useRoute()
-const isAdmin = computed(() => route.path.startsWith('/admin'))
+const route = useRoute();
+const isAdmin = computed(() => route.path.startsWith("/admin"));
 
-const settings = await useSiteSettings()
-const serviceBlocks = await useManagedPage('services', defaultServices)
+const settings = await useSiteSettings();
+const serviceBlocks = await useManagedPage("services", defaultServices);
 const serviceNames = computed(() =>
-  serviceBlocks.value.filter((b) => b.type === 'services').flatMap((b) => b.items.map((i) => i.title ?? '')).filter(Boolean),
-)
+  serviceBlocks.value
+    .filter((b) => b.type === "services")
+    .flatMap((b) => b.items.map((i) => i.title ?? ""))
+    .filter(Boolean),
+);
 </script>
 
 <template>
