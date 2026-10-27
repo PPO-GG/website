@@ -48,8 +48,16 @@ body::before {
     opacity: 0;
   }
 }
+.site-header,
+.hero .line,
+.scroll-cue {
+  animation: noise-in 1.8s ease-out 1.2s backwards;
+}
 @media (prefers-reduced-motion: reduce) {
-  body::before {
+  body::before,
+  .site-header,
+  .hero .line,
+  .scroll-cue {
     animation: none;
   }
 }
