@@ -103,6 +103,9 @@ onMounted(() => {
     // One depth layer of stars. p is in CSS pixels.
     // Each grid cell holds at most one star, kept well inside the cell
     // so only the local cell needs to be evaluated.
+    // Stars are drawn as hard square pixels of PX css px, on a shared pixel grid.
+    const float PX = 1.5;
+
     vec3 starLayer(vec2 p, float cell, float density, float radius, float seed, float speed) {
       vec2 g = p / cell;
       vec2 id = floor(g);
@@ -116,12 +119,18 @@ onMounted(() => {
       float h3 = hash(id + seed + 5.3);
 
       vec2 pos = 0.3 + 0.4 * vec2(h1, h2);
-      float d = length(f - pos) * cell;
 
-      // Most stars are small, a few are larger
+      // Snap both this fragment and the star to the pixel grid
+      vec2 pq = (floor(p / PX) + 0.5) * PX;
+      vec2 sq = (floor((id + pos) * cell / PX) + 0.5) * PX;
+      vec2 dv = abs(pq - sq);
+
+      // Most stars are one pixel, a few larger ones get a plus shape
       float r = radius * (0.6 + 1.4 * h3 * h3 * h3);
-      float core = exp(-(d * d) / (r * r));
-      float halo = pow(max(0.0, 1.0 - d / (r * 4.0)), 3.0) * 0.22;
+      float single = step(max(dv.x, dv.y), 0.01);
+      float plus = step(dv.x + dv.y, PX * 1.01);
+      float core = r > 1.3 ? plus : single;
+      if (core < 0.5) return vec3(0.0);
 
       // Slow Perlin-style field sampled at the star's own position:
       // neighbouring stars rise and fall together in drifting waves.
@@ -133,13 +142,14 @@ onMounted(() => {
       float own = 0.5 + 0.5 * sin(u_time * (0.15 + 0.35 * h2) * speed + h1 * 6.2831);
 
       float twinkle = mix(0.08, 0.5, mix(wave, own, 0.3));
+      twinkle = floor(twinkle * 6.0 + 0.5) / 6.0; // stepped brightness, like a low-bit sprite
       float base = 0.35 + 0.65 * h3;
 
       // Mostly white, occasionally cool blue or warm amber
       vec3 tint = mix(vec3(0.72, 0.82, 1.0), vec3(1.0, 0.86, 0.68), h1);
       tint = mix(vec3(1.0), tint, smoothstep(0.55, 0.95, h0 / density) * 0.8);
 
-      return tint * (core + halo) * base * twinkle;
+      return tint * base * twinkle;
     }
 
     void main() {

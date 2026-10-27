@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // A slowly turning Earth drawn as a grid of squares. Land is bigger and brighter than sea.
-const CELL = 9;
+const CELL = 10;
 const SPIN = 0.00005; // radians per ms
 const TILT = 0.41;
 const START_LON = -1.1; // radians: which longitude faces us at load (the Americas)
