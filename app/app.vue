@@ -15,6 +15,9 @@ const serviceNames = computed(() =>
 </script>
 
 <template>
+  <ClientOnly>
+    <StarfieldBackground />
+  </ClientOnly>
   <NuxtRouteAnnouncer />
   <SiteHeader v-if="!isAdmin" :banner="settings.banner" :nav="settings.nav" />
   <NuxtPage />
