@@ -22,12 +22,13 @@ body {
   font: 400 16px/1.65 var(--sans);
   min-height: 100vh;
   background: var(--blue);
+  isolation: isolate; /* background layers use z-index: -1 and stay above this background, below all content */
 }
 body::before {
   content: "";
   position: fixed;
   inset: 0;
-  z-index: 0;
+  z-index: -1;
   pointer-events: none;
   background: url("/assets/noise-texture.svg") repeat;
   background-size: 2800px 2800px;
@@ -39,7 +40,7 @@ body::before {
   inset: 0;
   width: 100%;
   height: 100%;
-  z-index: 0;
+  z-index: -1;
   pointer-events: none;
   animation: noise-in 2.6s ease-out both;
 }
@@ -250,7 +251,7 @@ a {
   inset: 0;
   width: 100%;
   height: 100%;
-  z-index: 0;
+  z-index: -1;
   pointer-events: none;
 }
 .wrap {
