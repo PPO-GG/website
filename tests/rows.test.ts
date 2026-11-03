@@ -33,6 +33,11 @@ describe('dataToDb', () => {
     expect(dataToDb(TABLE.Posts, 'p', { published: false })).toMatchObject({ published: 0 })
   })
 
+  it('skips undefined values', () => {
+    const out = dataToDb(TABLE.Pages, 'p', { slug: 's', title: undefined, published: undefined })
+    expect(out).toEqual({ id: 'p', slug: 's' })
+  })
+
   it('round-trips an app', () => {
     const data = {
       name: 'N', kind: 'K', stack: ['a', 'b'], year: 2024, status: 'live', href: 'https://x.y',

@@ -5,11 +5,17 @@ export interface D1Result<T = Record<string, unknown>> {
   results: T[]
 }
 
+/** Result of a write. `meta.changes` is the number of rows changed. */
+export interface D1RunResult {
+  success: boolean
+  meta: { changes: number }
+}
+
 export interface D1StatementLike {
   bind(...params: unknown[]): D1StatementLike
   all<T = Record<string, unknown>>(): Promise<D1Result<T>>
   first<T = Record<string, unknown>>(): Promise<T | null>
-  run(): Promise<unknown>
+  run(): Promise<D1RunResult>
 }
 
 export interface D1Like {

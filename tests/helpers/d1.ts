@@ -15,7 +15,10 @@ export function makeTestDb(): D1Like {
     bind: (...next) => statement(sql, next),
     all: async <T>() => ({ results: db.prepare(sql).all(...(params as SqlValue[])) as T[] }),
     first: async <T>() => (db.prepare(sql).get(...(params as SqlValue[])) as T | undefined) ?? null,
-    run: async () => db.prepare(sql).run(...(params as SqlValue[])),
+    run: async () => {
+      const { changes } = db.prepare(sql).run(...(params as SqlValue[]))
+      return { success: true, meta: { changes: Number(changes) } }
+    },
   })
   return { prepare: (sql) => statement(sql, []) }
 }
