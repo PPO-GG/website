@@ -43,7 +43,7 @@ My calls (the owner has not reviewed these):
 - **Admin writes:** Nitro server routes under `/api/admin/*` for list, save, delete and upload. Each route verifies the `Cf-Access-Jwt-Assertion` header against the Access team's public keys and the application audience tag before doing anything. `useAdmin()` keeps its list/save/remove/upload surface and calls these routes. `AdminLogin.vue` and the login/logout flow are removed. `restore()` becomes a call to an `/api/admin/me` route that tells the page whether the caller is the owner.
 - **Admin protection:** a Cloudflare Access application covers `/admin*` and `/api/admin*`, allowing the owner's email with a one-time email code.
 - **Media:** an R2 bucket. Upload goes through `/api/admin/upload`, which keeps the current limits (png, jpg, jpeg, webp, gif, svg; 10 MB). Images are served from `/media/[id]` on the same origin with long cache headers. SVGs are served with a `Content-Security-Policy: sandbox` header so a hostile SVG cannot run script on the site origin.
-- **Deploy command:** a `pnpm deploy` script that builds and runs `wrangler deploy`. `wrangler.jsonc` holds the D1 and R2 bindings.
+- **Deploy command:** a `pnpm cf:deploy` script that builds and runs `wrangler deploy` (not `deploy`: `pnpm deploy` is a pnpm built-in). `wrangler.jsonc` holds the D1 and R2 bindings.
 - **Error text:** `explain()` in `useAdmin.ts` is rewritten for the new routes (401/403 "login ended", 409 "slug in use"). UI text follows the existing ASD-STE100 style.
 - **Docs:** `README.md` is updated (content, deploy, setup sections).
 

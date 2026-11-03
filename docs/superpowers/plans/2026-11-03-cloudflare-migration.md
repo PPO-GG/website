@@ -163,7 +163,7 @@
 **Interfaces:**
 - `nuxt.config.ts`: `nitro: { preset: 'cloudflare_module' }`; remove `runtimeConfig.public.appwrite`; replace the three `cache: { swr }` route rules with the mechanism chosen in step 1. `/admin/**` stays `ssr: false`.
 - `wrangler.jsonc`: `name: "ppogg"`, D1 binding `DB` (database `ppogg`), R2 binding `MEDIA` (bucket `ppogg-media`), `migrations_dir: "migrations"`, vars `ACCESS_TEAM_DOMAIN` and `ACCESS_AUD` (empty placeholders), `compatibility_date` as in `nuxt.config.ts`.
-- `package.json`: remove `appwrite` and `node-appwrite`; add `wrangler` (dev) and scripts `deploy` (`nuxt build && wrangler deploy`) and `db:migrate` (`wrangler d1 migrations apply ppogg`).
+- `package.json`: remove `appwrite` and `node-appwrite`; add `wrangler` (dev) and scripts `cf:deploy` (`nuxt build && wrangler deploy`; not `deploy`, which `pnpm deploy` shadows as a built-in) and `db:migrate` (`wrangler d1 migrations apply ppogg --remote`).
 
 - [ ] **Step 1:** Choose the public caching mechanism (KV, Cache API, or none) and record the choice in the README. Constraint: an unpublish must be visible within one minute and a draft must never be cached (Review Focus 1). If you cache, add a test that a cached response is dropped after a write.
 - [ ] **Step 2:** Make the changes. Run `pnpm build`; expected: the build succeeds and `.output/server` targets Cloudflare.
@@ -177,5 +177,5 @@
 
 The owner does the account steps; this task writes them and checks the result.
 
-- [ ] **Step 1:** Write exact dashboard steps with the exact commands: create D1 `ppogg` and R2 `ppogg-media` (copy the new D1 id into `wrangler.jsonc`); `pnpm db:migrate --remote`; create the Access application covering `/admin*` and `/api/admin*` on `ppo.gg` and the `workers.dev` host, with one policy allowing the owner's email via one-time PIN; copy the team domain and AUD tag into `wrangler.jsonc` vars; `pnpm deploy`; test `/admin` on the `workers.dev` address; replace the DNS record that points at Appwrite with the Worker route; check the Definition of Done in the spec; delete the Appwrite project last.
+- [ ] **Step 1:** Write exact dashboard steps with the exact commands: create D1 `ppogg` and R2 `ppogg-media` (copy the new D1 id into `wrangler.jsonc`); `pnpm db:migrate` (the script already passes `--remote`); create the Access application covering `/admin*` and `/api/admin*` on `ppo.gg` and the `workers.dev` host, with one policy allowing the owner's email via one-time PIN; copy the team domain and AUD tag into `wrangler.jsonc` vars; `pnpm cf:deploy`; test `/admin` on the `workers.dev` address; replace the DNS record that points at Appwrite with the Worker route; check the Definition of Done in the spec; delete the Appwrite project last.
 - [ ] **Step 2:** Commit `Add Cloudflare setup guide`. Stop here and hand the guide to the owner; do not run `wrangler deploy` or change DNS without their go-ahead.

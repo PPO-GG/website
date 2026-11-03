@@ -144,7 +144,7 @@ async function submit() {
     else if (t === TAB.Posts) await admin.save(ADMIN_TABLE.Posts, editing.value.id, toPostData(postForm.value))
     else await admin.save(ADMIN_TABLE.Pages, editing.value.id, toPageData(pageForm.value))
     await loadAll()
-    notice.value = 'Saved. Published items show on the site within one minute.'
+    notice.value = 'Saved. Published items show on the site now.'
     cancel()
   } catch (e) {
     console.error(`[admin] could not save ${NOUN[t]}`, e)
@@ -162,7 +162,7 @@ async function submitSettings() {
     const data = { title: 'Site settings', slug: SYSTEM_SLUGS.Settings, body: serializeSettings(settingsForm.value), published: settingsPublished.value }
     await admin.save(ADMIN_TABLE.Pages, editing.value?.id, data)
     await loadAll()
-    notice.value = 'Saved. Header and footer update within one minute.'
+    notice.value = 'Saved. Header and footer update on the next page load.'
     cancel()
   } catch (e) {
     console.error('[admin] could not save site settings', e)

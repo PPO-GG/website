@@ -37,9 +37,13 @@ Why: Nitro's default cache on Workers is memory in one isolate (not shared and l
 
 ## Deploy
 
-1. `wrangler d1 create ppogg` and put the `database_id` in `wrangler.jsonc`. `wrangler r2 bucket create ppogg-media`.
-2. Create a Cloudflare Access application for `/admin` and `/api/admin/*` on the site domain. Put the team domain and the application AUD tag in `wrangler.jsonc` (`ACCESS_TEAM_DOMAIN`, `ACCESS_AUD`).
-3. `pnpm db:migrate` (applies `migrations/` to the remote D1), then `pnpm deploy` (`nuxt build && wrangler deploy`).
+wrangler is a dev dependency of this repo, so run it with `pnpm exec wrangler`.
+
+1. `pnpm exec wrangler login` (once, before the first remote command).
+2. `pnpm exec wrangler d1 create ppogg` and put the `database_id` in `wrangler.jsonc`. `pnpm exec wrangler r2 bucket create ppogg-media`.
+3. Create a Cloudflare Access application for `/admin` and `/api/admin/*` on the site domain. Put the team domain and the application AUD tag in `wrangler.jsonc` (`ACCESS_TEAM_DOMAIN`, `ACCESS_AUD`).
+   Set these two values in `wrangler.jsonc`, not in the Cloudflare dashboard: `wrangler deploy` replaces dashboard values with the values in the file.
+4. `pnpm db:migrate` (applies `migrations/` to the remote D1), then `pnpm cf:deploy` (`nuxt build && wrangler deploy`). Do not use `pnpm deploy`: that is a pnpm built-in command, not this script.
 
 Never set `ADMIN_DEV_BYPASS` on the deployed Worker; it has no effect there, but it should not exist.
 
