@@ -71,25 +71,27 @@ Do these steps in the Cloudflare dashboard. Look for **Zero Trust** in the sideb
    - `ppogg.<your-subdomain>.workers.dev`, path `/api/admin*`
 
    Look for the field for the path. The dashboard may ask for the host and the path in two fields. You add the `ppo.gg` destinations in step 7.
+
+   If the dashboard does not offer your workers.dev host as a destination, open the Worker > Settings > Domains & Routes > workers.dev and use **Enable Cloudflare Access**. That creates a second Access application with its own AUD tag, and it protects the whole workers.dev host (public pages ask for a login there too; that is expected and goes away after cutover). Put both AUD tags in `ACCESS_AUD` separated by a comma (for example `"aud1,aud2"`).
 5. Add one policy. Action: **Allow**. Rule: Emails, with your email address only. Do not add any other rule.
 6. Set the login method for the application to One-time PIN only.
-7. Check the cookie settings in the application. Leave SameSite at the default, or set it to Lax or Strict. Never set it to None. The CSRF defence in the code needs the cookie to stay out of cross-site requests.
-8. Save the application. Open it again and copy the **Application Audience (AUD) Tag**.
+7. Check the cookie settings in the application. Set SameSite to Lax. Do not use Strict: it can break the redirect back to the site after login. Never set it to None. The CSRF defence is in the code (the `Sec-Fetch-Site`, `Origin` and content-type check in `server/utils/csrf.ts`). SameSite is only a second layer of defence.
+8. Save the application. Open it again and copy the **Application Audience (AUD) Tag**. If you also enabled Access on workers.dev (see the fallback under item 4), copy the AUD tag of that second application too.
 9. Open `wrangler.jsonc`. Set the two values in the file:
    - `ACCESS_TEAM_DOMAIN`: the team domain only, for example `myteam.cloudflareaccess.com`. No `https://`, no `/` at the end, no path.
-   - `ACCESS_AUD`: the AUD tag.
+   - `ACCESS_AUD`: the AUD tag. If you have two Access applications, put both tags in one string, separated by a comma, for example `"aud1,aud2"`. Spaces around the comma are fine.
 
    Edit the file. Do not set these values in the dashboard: `wrangler deploy` replaces dashboard values with the values in the file.
 10. Run `pnpm cf:deploy` again.
 
-Public routes must stay outside Access: `/`, `/blog`, `/api/content/*` and `/media/*`. The application covers only `/admin*` and `/api/admin*`.
+Public routes must stay outside Access: `/`, `/blog`, `/api/content/*` and `/media/*`. The application you made for `ppo.gg` covers only `/admin*` and `/api/admin*`. The exception is the workers.dev fallback above: it protects the whole workers.dev host, so on that host public pages also ask for a login.
 
 Check:
 
 - Open `/admin` on the workers.dev address. Access asks for your email, then for the code it sends. After that, the admin shows.
 - Open `/api/admin/me` in the same browser. It returns your email.
 - Open `/api/admin/me` in a private window with no login. You get the Access login page, not data.
-- Open `/` and `/blog` in the private window. They load without a login.
+- Open `/` and `/blog` in the private window. They load without a login. If you used the workers.dev fallback, they ask for a login on the workers.dev address instead. That is expected. Check the public pages without a login after cutover (step 7).
 
 ## 6. Test on workers.dev
 
@@ -98,10 +100,11 @@ Do this before you touch the DNS. Use the admin on the workers.dev address.
 - [ ] Create an app, publish it, unpublish it, delete it.
 - [ ] Create a post, publish it, unpublish it, delete it.
 - [ ] Create a page, publish it, unpublish it, delete it.
-- [ ] Upload a png image. It shows at `/media/<id>` (the admin shows the id).
+- [ ] Upload a png image. It shows at `/media/<id>` (the page-builder image field shows `/media/<id>`, and the markdown editor inserts it; the app editor shows only a thumbnail).
 - [ ] An unpublished item disappears from the public site at once (reload the public page).
 - [ ] Use the same slug on two posts. The admin shows the "slug in use" message.
 - [ ] Open the header and footer settings page. Change a value and save it. The change shows on the site on the next page load.
+- [ ] Open the longest post and the home page on the workers.dev address. There must be no Error 1102 (CPU limit). If you see 1102, see Troubleshooting.
 - [ ] Log out: open `/cdn-cgi/access/logout`. Then open `/admin`. Access asks for the code again.
 
 Delete your test items when you finish.
@@ -110,7 +113,7 @@ Delete your test items when you finish.
 
 Today Appwrite Sites serves `ppo.gg`. In this step the Worker takes over. Expect a short downtime.
 
-1. In the Cloudflare dashboard, open the DNS records for `ppo.gg` (look for DNS > Records). Find the record that points `ppo.gg` to Appwrite. Take a screenshot or copy its type, name and value. You need it for the rollback.
+1. In the Cloudflare dashboard, open the DNS records for `ppo.gg` (look for DNS > Records). Find the record that points `ppo.gg` to Appwrite. Take a screenshot or copy its type, name, value and proxy status (DNS only or Proxied). You need all of it for the rollback. Also look for a `www` record or any other hostname that points to Appwrite, and note it.
 2. Add `ppo.gg` to the Access application. Add these destinations: host `ppo.gg`, path `/admin*`, and host `ppo.gg`, path `/api/admin*`. Save.
 3. Remove the DNS record that points to Appwrite. Cloudflare will not let you attach a custom domain while a conflicting record exists.
 4. Attach the Worker to `ppo.gg`. Look for Workers & Pages > `ppogg` > Settings > Domains & Routes (the name may differ). Add a **Custom domain** and enter `ppo.gg`. Cloudflare creates the DNS record for you.
@@ -118,7 +121,7 @@ Today Appwrite Sites serves `ppo.gg`. In this step the Worker takes over. Expect
 
 Check on `https://ppo.gg`: do all the items from step 6 again. Also do the Access checks from step 5 on `https://ppo.gg` (`/admin` asks for the code, `/api/admin/me` in a private window shows the Access login page).
 
-**Rollback.** If something is wrong and you cannot fix it fast: remove the Worker custom domain for `ppo.gg`, then restore the DNS record you saved in step 1. Appwrite is still live and nothing is deleted, so the old site returns when DNS has propagated.
+**Rollback.** If something is wrong and you cannot fix it fast: remove the Worker custom domain for `ppo.gg`, then restore the DNS record you saved in step 1, with the same value and the same proxy status. Appwrite is still live and nothing is deleted, so the old site returns when DNS has propagated.
 
 ## 8. Content
 
@@ -149,6 +152,13 @@ Do this last. Do it only when every box in step 9 is checked. You can wait a few
 
 **This step cannot be undone.** Appwrite deletes the project, its database and its files for good. Download anything you still want before you start.
 
+Before you delete it:
+
+- Check the DNS records again. No `www` record and no other hostname may still point to Appwrite.
+- The app image `public/shots/stagepoint.png` came from the Appwrite bucket. Commit 64769e9 removed it from the repository. Recover it with `git show 64769e9^:public/shots/stagepoint.png > stagepoint.png`, or download it from the Appwrite bucket before you delete the project.
+
+Then:
+
 1. In the Appwrite console, open the project settings and delete the project. Look for Settings > Delete project.
    Check: `https://ppo.gg` still works.
 
@@ -157,7 +167,7 @@ Do this last. Do it only when every box in step 9 is checked. You can wait a few
 | What you see | Cause | Fix |
 |---|---|---|
 | 500 "Access is not configured" on `/api/admin/*` | `ACCESS_TEAM_DOMAIN` or `ACCESS_AUD` is empty or not in `wrangler.jsonc` | Set both in `wrangler.jsonc` (team domain only: no `https://`, no `/`, no path). Run `pnpm cf:deploy`. |
-| 401 on the admin after you log in | Wrong AUD tag; or the Access application does not cover `/api/admin*`; or the cookie does not reach that path | Copy the AUD tag again. Check the application destinations for `/admin*` and `/api/admin*` on the host you use. Check that SameSite is not None and that the host in the address bar is a host in the application. |
+| 401 on the admin after you log in | Wrong or missing AUD tag (with two Access applications, both tags must be in `ACCESS_AUD`, separated by a comma); or the Access application does not cover `/api/admin*`; or the cookie does not reach that path | Copy the AUD tag again and list every tag, separated by commas. Check the application destinations for `/admin*` and `/api/admin*` on the host you use. Check that SameSite is Lax (not None) and that the host in the address bar is a host in the application. |
 | Admin writes return 403 | The code compares the host in the `Origin` header with the `Host` header. They are different if a proxy rewrites `Host`. | Do not rewrite the `Host` header in front of the Worker. A direct Custom domain or workers.dev address does not rewrite it. |
 | "Error 1102" or "CPU limit exceeded" on a page | The free plan gives 10 ms of CPU for each request. The site has no page cache, so each page renders in full. | Add a Cache API layer with a TTL shorter than 60 seconds (and drop it on every admin write), or use the paid Workers plan. See Caching in `README.md`. |
 | 409 "That slug is already in use" when you save | Another post or page has this slug | Use a different slug. |

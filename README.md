@@ -41,7 +41,7 @@ wrangler is a dev dependency of this repo, so run it with `pnpm exec wrangler`.
 
 1. `pnpm exec wrangler login` (once, before the first remote command).
 2. `pnpm exec wrangler d1 create ppogg` and put the `database_id` in `wrangler.jsonc`. `pnpm exec wrangler r2 bucket create ppogg-media`.
-3. Create a Cloudflare Access application for `/admin` and `/api/admin/*` on the site domain. Put the team domain and the application AUD tag in `wrangler.jsonc` (`ACCESS_TEAM_DOMAIN`, `ACCESS_AUD`).
+3. Create a Cloudflare Access application for `/admin` and `/api/admin/*` on the site domain. Put the team domain and the application AUD tag in `wrangler.jsonc` (`ACCESS_TEAM_DOMAIN`, `ACCESS_AUD`). `ACCESS_AUD` accepts several tags separated by commas (for example `"aud1,aud2"`), for the case of a second Access application on workers.dev. See `docs/cloudflare-setup.md`.
    Set these two values in `wrangler.jsonc`, not in the Cloudflare dashboard: `wrangler deploy` replaces dashboard values with the values in the file.
 4. `pnpm db:migrate` (applies `migrations/` to the remote D1), then `pnpm cf:deploy` (`nuxt build && wrangler deploy`). Do not use `pnpm deploy`: that is a pnpm built-in command, not this script.
 
