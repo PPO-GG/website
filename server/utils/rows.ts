@@ -32,7 +32,7 @@ export function dbToRow(table: Table, raw: Record<string, unknown>): AppRow | Po
 /** Converts admin data to D1 column values. */
 export function dataToDb(table: Table, id: string, data: Record<string, unknown>): Record<string, unknown> {
   const out: Record<string, unknown> = { id }
-  for (const key of COLUMNS[table]) if (key in data) out[key] = data[key]
+  for (const key of COLUMNS[table]) if (key in data && data[key] !== undefined) out[key] = data[key]
   if ('published' in out) out.published = out.published === true ? 1 : 0
   if (table === TABLE.Apps && 'stack' in out) out.stack = JSON.stringify(out.stack ?? [])
   return out
