@@ -13,6 +13,7 @@
   "dependencies": {
     "@nuxtjs/mdc": "^0.23.2",
     "appwrite": "^29.1.0",
+    "jose": "^6.2.15",
     "nuxt": "^4.0.0",
     "vue": "latest",
     "vue-router": "latest"
