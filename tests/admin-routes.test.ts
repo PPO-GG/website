@@ -67,4 +67,13 @@ describe('admin routes require the owner', () => {
     expect(error).toMatchObject({ statusCode: 500 })
     expect(await snapshot()).toEqual(before)
   })
+
+  it.each(ROUTES.slice(2))('$name gives 401 before 403 for an unauthenticated cross-site write', async ({ load, params, method }) => {
+    const handler = (await load()).default
+    const event = tokenlessEvent(params, method)
+    ;(event.node.req.headers as Record<string, string>)['sec-fetch-site'] = 'cross-site'
+    const before = await snapshot()
+    expect(await handler(event).then(() => null, (e: unknown) => e)).toMatchObject({ statusCode: 401 })
+    expect(await snapshot()).toEqual(before)
+  })
 })
