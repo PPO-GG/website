@@ -5,13 +5,21 @@ import type { JWTVerifyGetKey } from 'jose'
 
 export interface AccessConfig {
   teamDomain: string
-  aud: string
+  /** One audience tag, or several when more than one Access application guards the host. */
+  aud: string | string[]
 }
 
 export interface AccessEnv {
   ACCESS_TEAM_DOMAIN?: string
   ACCESS_AUD?: string
   ADMIN_DEV_BYPASS?: string
+}
+
+/** Splits a comma-separated ACCESS_AUD value. One value gives a string, several give a list, none gives undefined. */
+export function parseAudiences(raw: string | undefined): string | string[] | undefined {
+  const list = (raw ?? '').split(',').map((v) => v.trim()).filter(Boolean)
+  if (list.length === 0) return undefined
+  return list.length === 1 ? list[0] : list
 }
 
 export type HeaderSource = Headers | Record<string, string | undefined>
@@ -64,7 +72,7 @@ export async function ownerFromRequest(
   if (dev === true && env.ADMIN_DEV_BYPASS === '1') return { email: 'dev@localhost' }
 
   const teamDomain = env.ACCESS_TEAM_DOMAIN
-  const aud = env.ACCESS_AUD
+  const aud = parseAudiences(env.ACCESS_AUD)
   if (!teamDomain || !aud) {
     throw createError({ statusCode: 500, statusMessage: 'Access is not configured' })
   }
@@ -72,7 +80,10 @@ export async function ownerFromRequest(
   try {
     return await verifyAccessToken(readHeader(headers), { teamDomain, aud }, keys ?? remoteKeys(teamDomain))
   }
-  catch {
+  catch (e) {
+    // Log the reason only. The token and the header value must never reach the log.
+    const code = (e as { code?: string } | null)?.code ?? (e as Error | null)?.name ?? 'unknown'
+    console.error('[access] token rejected', code)
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
   }
 }

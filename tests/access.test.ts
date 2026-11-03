@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from 'vitest'
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { SignJWT, createLocalJWKSet, exportJWK, generateKeyPair } from 'jose'
 import type { JWTVerifyGetKey } from 'jose'
 import { ownerFromRequest, requireOwner, verifyAccessToken } from '../server/utils/access'
@@ -96,6 +96,39 @@ describe('ownerFromRequest', () => {
   it('bypasses only when dev is true and ADMIN_DEV_BYPASS=1', async () => {
     expect(await ownerFromRequest({}, { ADMIN_DEV_BYPASS: '1' }, true, keys)).toEqual({ email: 'dev@localhost' })
     await expect(ownerFromRequest({}, { ...ENV, ADMIN_DEV_BYPASS: '0' }, true, keys)).rejects.toMatchObject({ statusCode: 401 })
+  })
+})
+
+describe('several audiences', () => {
+  const env = (aud: string) => ({ ACCESS_TEAM_DOMAIN: TEAM, ACCESS_AUD: aud })
+  it('accepts a token whose aud matches the second configured value', async () => {
+    const token = await sign({ aud: 'aud-b' })
+    expect(await ownerFromRequest(headers(token), env('aud-a,aud-b'), false, keys)).toEqual({ email: 'owner@example.com' })
+  })
+  it('rejects a token whose aud is not listed', async () => {
+    const token = await sign({ aud: 'aud-c' })
+    await expect(ownerFromRequest(headers(token), env('aud-a,aud-b'), false, keys)).rejects.toMatchObject({ statusCode: 401 })
+  })
+  it('trims spaces around the values', async () => {
+    const token = await sign({ aud: 'aud-b' })
+    expect(await ownerFromRequest(headers(token), env('aud-a , aud-b'), false, keys)).toEqual({ email: 'owner@example.com' })
+  })
+  it('treats a value of only separators and spaces as not configured', async () => {
+    const token = await sign()
+    await expect(ownerFromRequest(headers(token), env(' , '), false, keys)).rejects.toMatchObject({ statusCode: 500 })
+  })
+})
+
+describe('token failure log', () => {
+  afterEach(() => vi.restoreAllMocks())
+  it('logs the failure code and never the token', async () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const token = await sign({ aud: 'other' })
+    await expect(ownerFromRequest(headers(token), ENV, false, keys)).rejects.toMatchObject({ statusCode: 401 })
+    expect(spy).toHaveBeenCalledTimes(1)
+    expect(spy.mock.calls[0]![0]).toBe('[access] token rejected')
+    expect(spy.mock.calls[0]![1]).toBe('ERR_JWT_CLAIM_VALIDATION_FAILED')
+    expect(JSON.stringify(spy.mock.calls)).not.toContain(token)
   })
 })
 
