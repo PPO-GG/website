@@ -1,4 +1,4 @@
-import { Account, AppwriteException, Client, ID, Query, Storage, TablesDB } from 'appwrite'
+import { Account, Client, ID, Query, Storage, TablesDB } from 'appwrite'
 import type { Models } from 'appwrite'
 
 export const ADMIN_LABEL = 'admin'
@@ -8,14 +8,9 @@ export type AdminTable = (typeof ADMIN_TABLE)[keyof typeof ADMIN_TABLE]
 const LIST_LIMIT = 100
 const HTTP = { Unauthorized: 401, Forbidden: 403, Conflict: 409 } as const
 
-/** Turns an SDK error into one plain sentence for the person using the editor. */
+/** Turns an error into one plain sentence for the person using the editor. */
 export function explain(e: unknown): string {
-  if (e instanceof AppwriteException) {
-    if (e.code === HTTP.Unauthorized || e.code === HTTP.Forbidden) return 'Your login ended or has no access. Log in again.'
-    if (e.code === HTTP.Conflict) return 'This slug is already in use. Choose a different slug.'
-    return `Appwrite returned an error: ${e.message}`
-  }
-  return e instanceof Error ? e.message : 'Something went wrong. Try again.'
+  return 'Something went wrong. Try again.'
 }
 
 /** Client-side admin access. The session lives in the browser; Appwrite permissions are the real lock. */
