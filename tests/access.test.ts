@@ -13,8 +13,8 @@ let keys: JWTVerifyGetKey
 let privateKey: CryptoKey
 let otherKey: CryptoKey
 
-async function sign(opts: { key?: CryptoKey; iss?: string; aud?: string; exp?: string | number } = {}) {
-  return new SignJWT({ email: 'owner@example.com' })
+async function sign(opts: { key?: CryptoKey; iss?: string; aud?: string; exp?: string | number; claims?: Record<string, unknown> } = {}) {
+  return new SignJWT(opts.claims ?? { email: 'owner@example.com' })
     .setProtectedHeader({ alg: 'RS256', kid: 'k1' })
     .setIssuer(opts.iss ?? `https://${TEAM}`)
     .setAudience(opts.aud ?? AUD)
@@ -60,6 +60,16 @@ describe('verifyAccessToken', () => {
   })
 })
 
+const BAD_EMAILS: Array<[string, Record<string, unknown>]> = [['no email', {}], ['empty email', { email: '' }], ['non-string email', { email: 42 }]]
+
+describe('email claim', () => {
+  it.each(BAD_EMAILS)('rejects a signed token with %s', async (_n, claims) => {
+    const token = await sign({ claims })
+    await expect(verifyAccessToken(token, CFG, keys)).rejects.toThrow()
+    await expect(ownerFromRequest(headers(token), ENV, false, keys)).rejects.toMatchObject({ statusCode: 401 })
+  })
+})
+
 describe('ownerFromRequest', () => {
   it('accepts a valid token from a plain header record', async () => {
     expect(await ownerFromRequest(headers(await sign()), ENV, false, keys)).toEqual({ email: 'owner@example.com' })
@@ -92,6 +102,10 @@ describe('ownerFromRequest', () => {
 describe('requireOwner', () => {
   it('gives 500 with no config', async () => {
     const event = { node: { req: { headers: {} } }, context: {} } as unknown as H3Event
+    await expect(requireOwner(event)).rejects.toMatchObject({ statusCode: 500 })
+  })
+  it('does not bypass on ADMIN_DEV_BYPASS=1 alone (production path)', async () => {
+    const event = { node: { req: { headers: {} } }, context: { cloudflare: { env: { ADMIN_DEV_BYPASS: '1' } } } } as unknown as H3Event
     await expect(requireOwner(event)).rejects.toMatchObject({ statusCode: 500 })
   })
 })
