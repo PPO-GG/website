@@ -16,7 +16,7 @@ export async function listPublishedApps(db: D1Like): Promise<AppRow[]> {
 
 export async function listPublishedPosts(db: D1Like): Promise<PostRow[]> {
   const { results } = await db
-    .prepare('SELECT * FROM posts WHERE published = 1 ORDER BY publishedAt DESC LIMIT ?')
+    .prepare('SELECT * FROM posts WHERE published = 1 ORDER BY publishedAt DESC, slug ASC LIMIT ?')
     .bind(LIST_LIMIT)
     .all()
   return results.map((r) => dbToRow(TABLE.Posts, r) as PostRow)

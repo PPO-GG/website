@@ -15,6 +15,16 @@ describe('explain', () => {
     expect(explain(Object.assign(new Error('x'), { status: 401 }))).toBe(LOGIN)
   })
 
+  it('explains a fetch error with no status (Access redirect blocked as CORS) as a login problem', () => {
+    const e = Object.assign(new TypeError('Failed to fetch'), { name: 'FetchError', status: undefined, statusCode: undefined, response: undefined })
+    expect(explain(e)).toBe(LOGIN)
+    expect(explain(new TypeError('[GET] "/api/admin/apps": <no response> Failed to fetch'))).toBe(LOGIN)
+  })
+
+  it('keeps the message of a plain error', () => {
+    expect(explain(new Error('boom'))).toBe('boom')
+  })
+
   it('explains 409 as a slug clash', () => {
     expect(explain(fetchError(409))).toBe('This slug is already in use. Choose a different slug.')
   })

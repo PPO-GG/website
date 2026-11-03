@@ -9,16 +9,24 @@ interface FetchLikeError {
   /** The parsed response body. h3 nests `createError({ data })` one level down, in `data.data`. */
   data?: { data?: { errors?: unknown }; errors?: unknown }
   message?: string
+  name?: string
+  response?: unknown
 }
+
+const LOGIN_ENDED = 'Your login ended or has no access. Log in again.'
 
 /** Turns a failed request into one plain sentence for the person using the editor. */
 export function explain(e: unknown): string {
   if (e && typeof e === 'object') {
     const err = e as FetchLikeError
+    // When the Access session ends mid-edit, Access redirects the request to another origin and the
+    // browser blocks it as a CORS error. The fetch then fails with no status and no response.
+    const noStatus = (err.statusCode ?? err.status) === undefined && err.response === undefined
+    if (noStatus && (err.name === 'FetchError' || (typeof err.message === 'string' && err.message.includes('Failed to fetch')))) return LOGIN_ENDED
     switch (err.statusCode ?? err.status) {
       case HTTP.Unauthorized:
       case HTTP.Forbidden:
-        return 'Your login ended or has no access. Log in again.'
+        return LOGIN_ENDED
       case HTTP.Conflict:
         return 'This slug is already in use. Choose a different slug.'
       case HTTP.Invalid:

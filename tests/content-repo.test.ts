@@ -66,6 +66,12 @@ describe('listPublishedPosts', () => {
     expect(rows.map((r) => r.slug)).toEqual(['new', 'old'])
     expect(rows[0]).not.toHaveProperty('updatedAt')
   })
+  it('orders posts with the same publishedAt by slug', async () => {
+    await addPost('p1', 'b-post', '2026-02-01', 1)
+    await addPost('p2', 'a-post', '2026-02-01', 1)
+    await addPost('p3', 'c-post', '2026-02-01', 1)
+    expect((await listPublishedPosts(db)).map((r) => r.slug)).toEqual(['a-post', 'b-post', 'c-post'])
+  })
   it('drops a post once it is unpublished', async () => {
     await addPost('p1', 'one', '2026-01-01', 1)
     expect(await listPublishedPosts(db)).toHaveLength(1)

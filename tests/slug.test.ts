@@ -31,6 +31,7 @@ describe('isValidSlug', () => {
   })
   it('rejects every reserved slug', () => {
     expect(RESERVED_SLUGS).toEqual(expect.arrayContaining(['admin', 'blog', 'api']))
+    expect(RESERVED_SLUGS).toEqual(expect.arrayContaining(['media', 'cdn-cgi']))
     for (const s of RESERVED_SLUGS) expect(isValidSlug(s)).toBe(false)
   })
 })
