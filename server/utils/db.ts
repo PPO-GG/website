@@ -13,3 +13,7 @@ export interface D1StatementLike {
 export interface D1Like {
   prepare(sql: string): D1StatementLike
 }
+
+export function useDb(_event: unknown): D1Like {
+  return undefined as unknown as D1Like
+}
