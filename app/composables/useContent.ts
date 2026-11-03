@@ -17,7 +17,7 @@ export function useContent() {
   // instead of showing an empty site that looks intentional.
   async function load<R, T>(what: string, path: string, map: (res: R) => T, empty: T): Promise<Loaded<T>> {
     try {
-      return { data: map(await api<R>(path)), failed: false }
+      return { data: map((await api(path)) as R), failed: false }
     } catch (e) {
       console.error(`[content] could not load ${what} from "${path}"`, e)
       return { data: empty, failed: true }
