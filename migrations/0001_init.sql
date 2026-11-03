@@ -1,4 +1,4 @@
--- ppo.gg D1 schema. Columns follow scripts/appwrite-setup.sh. "order" is quoted: it is a SQL keyword.
+-- ppo.gg D1 schema: the single source of the table and column list. "order" is quoted: it is a SQL keyword.
 CREATE TABLE apps (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,

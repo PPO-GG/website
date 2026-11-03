@@ -1,7 +1,8 @@
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
   devtools: { enabled: true },
-  modules: ["@nuxtjs/mdc", "@nuxt/fonts"],
+  // nitro-cloudflare-dev gives `nuxt dev` the D1/R2 bindings and .dev.vars from wrangler.jsonc (local only).
+  modules: ["@nuxtjs/mdc", "@nuxt/fonts", "nitro-cloudflare-dev"],
   css: ["~/assets/css/main.css", "~/assets/css/site.css"],
   fonts: {
     defaults: {
@@ -10,20 +11,9 @@ export default defineNuxtConfig({
       subsets: ["latin"],
     },
   },
-  runtimeConfig: {
-    public: {
-      appwrite: {
-        endpoint: "https://nyc.cloud.appwrite.io/v1",
-        projectId: "6adf1e9f0019873f1a42",
-        databaseId: "ppogg",
-        bucketId: "media",
-      },
-    },
-  },
+  nitro: { preset: "cloudflare_module" },
+  // No page cache: every public request reads D1, so an unpublish shows at once. See README > Caching.
   routeRules: {
-    "/": { cache: { maxAge: 60, swr: true } },
-    "/_payload.json": { cache: { maxAge: 60, swr: true } },
-    "/blog/**": { cache: { maxAge: 60, swr: true } },
     "/admin/**": { ssr: false },
   },
   app: {
