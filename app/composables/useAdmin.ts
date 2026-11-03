@@ -1,82 +1,72 @@
-import { Account, Client, ID, Query, Storage, TablesDB } from 'appwrite'
-import type { Models } from 'appwrite'
-
-export const ADMIN_LABEL = 'admin'
 export const ADMIN_TABLE = { Apps: 'apps', Posts: 'posts', Pages: 'pages' } as const
 export type AdminTable = (typeof ADMIN_TABLE)[keyof typeof ADMIN_TABLE]
 
-const LIST_LIMIT = 100
-const HTTP = { Unauthorized: 401, Forbidden: 403, Conflict: 409 } as const
+const HTTP = { Unauthorized: 401, Forbidden: 403, Conflict: 409, TooLarge: 413, UnsupportedType: 415, Invalid: 422 } as const
 
-/** Turns an error into one plain sentence for the person using the editor. */
-export function explain(e: unknown): string {
-  return 'Something went wrong. Try again.'
+interface FetchLikeError {
+  statusCode?: number
+  status?: number
+  data?: { errors?: unknown }
+  message?: string
 }
 
-/** Client-side admin access. The session lives in the browser; Appwrite permissions are the real lock. */
+/** Turns a failed request into one plain sentence for the person using the editor. */
+export function explain(e: unknown): string {
+  if (e && typeof e === 'object') {
+    const err = e as FetchLikeError
+    switch (err.statusCode ?? err.status) {
+      case HTTP.Unauthorized:
+      case HTTP.Forbidden:
+        return 'Your login ended or has no access. Log in again.'
+      case HTTP.Conflict:
+        return 'This slug is already in use. Choose a different slug.'
+      case HTTP.Invalid:
+        if (Array.isArray(err.data?.errors) && err.data.errors.length) return err.data.errors.join(' ')
+        break
+      case HTTP.TooLarge:
+        return 'The file is too big. The limit is 10 MB.'
+      case HTTP.UnsupportedType:
+        return 'This file type is not allowed. Use png, jpg, webp, gif or svg.'
+    }
+  }
+  return e instanceof Error ? e.message : 'Something went wrong. Try again.'
+}
+
+/** Client-side admin access. Cloudflare Access guards the routes; the server checks every request. */
 export function useAdmin() {
-  const cfg = useRuntimeConfig().public.appwrite
-  const client = new Client().setEndpoint(cfg.endpoint).setProject(cfg.projectId)
-  const account = new Account(client)
-  const db = new TablesDB(client)
-  const storage = new Storage(client)
-  const user = useState<Models.User<Models.Preferences> | null>('admin-user', () => null)
+  const user = useState<{ email: string } | null>('admin-user', () => null)
+  const api = useRequestFetch()
 
-  const isAdmin = (u: Models.User<Models.Preferences>) => u.labels.includes(ADMIN_LABEL)
-
-  /** Restores a saved session. Returns false when nobody, or a non-admin, is logged in. */
+  /** Asks the server who is logged in. Returns false when nobody has access. */
   async function restore(): Promise<boolean> {
     try {
-      const u = await account.get()
-      user.value = isAdmin(u) ? u : null
+      user.value = await api<{ email: string }>('/api/admin/me')
     } catch {
-      user.value = null // no session is the normal logged-out state
+      user.value = null // no access is the normal logged-out state
     }
     return user.value !== null
   }
 
-  async function login(email: string, password: string): Promise<void> {
-    await account.createEmailPasswordSession({ email, password })
-    const u = await account.get()
-    if (!isAdmin(u)) {
-      await account.deleteSession({ sessionId: 'current' })
-      throw new Error('This account has no admin access.')
-    }
-    user.value = u
-  }
-
-  async function logout(): Promise<void> {
-    try {
-      await account.deleteSession({ sessionId: 'current' })
-    } finally {
-      user.value = null
-    }
-  }
-
   async function list<R>(tableId: AdminTable, order: { key: string; desc?: boolean }): Promise<R[]> {
-    const res = await db.listRows({
-      databaseId: cfg.databaseId,
-      tableId,
-      queries: [order.desc ? Query.orderDesc(order.key) : Query.orderAsc(order.key), Query.limit(LIST_LIMIT)],
-    })
-    return res.rows as unknown as R[]
+    return await api<R[]>(`/api/admin/${tableId}`, { query: { sort: order.key, ...(order.desc ? { desc: 1 } : {}) } })
   }
 
-  /** Creates (no id) or updates a row. */
-  async function save(tableId: AdminTable, id: string | undefined, data: Record<string, unknown>, published: boolean): Promise<void> {
-    if (id) await db.updateRow({ databaseId: cfg.databaseId, tableId, rowId: id, data })
-    else await db.createRow({ databaseId: cfg.databaseId, tableId, rowId: ID.unique(), data })
+  /** Creates (no id) or replaces a row. */
+  async function save(tableId: AdminTable, id: string | undefined, data: Record<string, unknown>): Promise<void> {
+    if (id) await api(`/api/admin/${tableId}/${id}`, { method: 'PUT', body: data })
+    else await api(`/api/admin/${tableId}`, { method: 'POST', body: data })
   }
 
   async function remove(tableId: AdminTable, id: string): Promise<void> {
-    await db.deleteRow({ databaseId: cfg.databaseId, tableId, rowId: id })
+    await api(`/api/admin/${tableId}/${id}`, { method: 'DELETE' })
   }
 
-  /** Uploads an image to the public media bucket. */
+  /** Uploads an image to the media store. */
   async function upload(file: File): Promise<{ id: string; url: string }> {
-    const created = await storage.createFile({ bucketId: cfg.bucketId, fileId: ID.unique(), file, permissions: ['read("any")'] })
-    return { id: created.$id, url: `${cfg.endpoint}/storage/buckets/${cfg.bucketId}/files/${created.$id}/view?project=${cfg.projectId}` }
+    const body = new FormData()
+    body.append('file', file)
+    return await api<{ id: string; url: string }>('/api/admin/upload', { method: 'POST', body })
   }
 
-  return { user, restore, login, logout, list, save, remove, upload }
+  return { user, restore, list, save, remove, upload }
 }

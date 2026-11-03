@@ -45,8 +45,7 @@ const SYSTEM_ENTRIES: { slug: SystemSlug; title: string; sub: string }[] = [
 ]
 const systemRow = (slug: SystemSlug) => pages.value.find((r) => r.slug === slug)
 
-// Load the lists whenever a user appears, from a saved session or a fresh login. The login form
-// unmounts as soon as the user is set, so its "done" event cannot be relied on to start the load.
+// Load the lists whenever a user appears, and clear them when the user goes.
 watch(() => admin.user.value, (u) => {
   if (u) void loadAll()
   else apps.value = posts.value = pages.value = []
@@ -69,11 +68,6 @@ async function loadAll() {
     console.error('[admin] could not load content', e)
     loadError.value = explain(e)
   }
-}
-
-async function logout() {
-  await admin.logout()
-  editing.value = null
 }
 
 function switchTab(t: Tab) {
@@ -146,9 +140,9 @@ async function submit() {
   if (errors.value.length) return
   busy.value = true
   try {
-    if (t === TAB.Apps) await admin.save(ADMIN_TABLE.Apps, editing.value.id, toAppData(appForm.value), appForm.value.published)
-    else if (t === TAB.Posts) await admin.save(ADMIN_TABLE.Posts, editing.value.id, toPostData(postForm.value), postForm.value.published)
-    else await admin.save(ADMIN_TABLE.Pages, editing.value.id, toPageData(pageForm.value), pageForm.value.published)
+    if (t === TAB.Apps) await admin.save(ADMIN_TABLE.Apps, editing.value.id, toAppData(appForm.value))
+    else if (t === TAB.Posts) await admin.save(ADMIN_TABLE.Posts, editing.value.id, toPostData(postForm.value))
+    else await admin.save(ADMIN_TABLE.Pages, editing.value.id, toPageData(pageForm.value))
     await loadAll()
     notice.value = 'Saved. Published items show on the site within one minute.'
     cancel()
@@ -166,7 +160,7 @@ async function submitSettings() {
   busy.value = true
   try {
     const data = { title: 'Site settings', slug: SYSTEM_SLUGS.Settings, body: serializeSettings(settingsForm.value), published: settingsPublished.value }
-    await admin.save(ADMIN_TABLE.Pages, editing.value?.id, data, settingsPublished.value)
+    await admin.save(ADMIN_TABLE.Pages, editing.value?.id, data)
     await loadAll()
     notice.value = 'Saved. Header and footer update within one minute.'
     cancel()
@@ -208,14 +202,13 @@ const list = computed<{ id: string; title: string; sub: string; published: boole
 <template>
   <div class="wrap admin">
     <p v-if="!ready" class="notice">Loading</p>
-    <AdminLogin v-else-if="!admin.user.value" />
+    <p v-else-if="!admin.user.value" class="notice err">You have no access. Log in with Cloudflare Access.</p>
     <template v-else>
       <header class="admin-head">
         <h1>Admin</h1>
         <span class="admin-who">
           {{ admin.user.value.email }}
           <NuxtLink to="/" target="_blank">View site</NuxtLink>
-          <button type="button" class="btn small" @click="logout">Log out</button>
         </span>
       </header>
 
