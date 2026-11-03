@@ -19,12 +19,23 @@ describe('explain', () => {
     expect(explain(fetchError(409))).toBe('This slug is already in use. Choose a different slug.')
   })
 
-  it('joins the 422 errors', () => {
+  it('joins the 422 errors from the h3 error body', () => {
+    const body = { statusCode: 422, data: { errors: ['Title is empty.', 'Slug is not valid.'] } }
+    expect(explain(fetchError(422, body))).toBe('Title is empty. Slug is not valid.')
+  })
+
+  it('joins the 422 errors from a flat body', () => {
     expect(explain(fetchError(422, { errors: ['Title is empty.', 'Slug is not valid.'] }))).toBe('Title is empty. Slug is not valid.')
   })
 
   it('falls back to the message for a 422 without errors', () => {
-    expect(explain(fetchError(422, {}))).toBe('HTTP 422')
+    expect(explain(fetchError(422, { statusCode: 422, data: {} }))).toBe('HTTP 422')
+    expect(explain(fetchError(422))).toBe('HTTP 422')
+  })
+
+  it('falls back to the message when 422 errors are not a list of strings', () => {
+    expect(explain(fetchError(422, { statusCode: 422, data: { errors: 'bad' } }))).toBe('HTTP 422')
+    expect(explain(fetchError(422, { statusCode: 422, data: { errors: [1, 2] } }))).toBe('HTTP 422')
   })
 
   it('explains 413 as the size limit', () => {

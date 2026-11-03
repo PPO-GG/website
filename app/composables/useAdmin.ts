@@ -6,7 +6,8 @@ const HTTP = { Unauthorized: 401, Forbidden: 403, Conflict: 409, TooLarge: 413, 
 interface FetchLikeError {
   statusCode?: number
   status?: number
-  data?: { errors?: unknown }
+  /** The parsed response body. h3 nests `createError({ data })` one level down, in `data.data`. */
+  data?: { data?: { errors?: unknown }; errors?: unknown }
   message?: string
 }
 
@@ -21,7 +22,9 @@ export function explain(e: unknown): string {
       case HTTP.Conflict:
         return 'This slug is already in use. Choose a different slug.'
       case HTTP.Invalid:
-        if (Array.isArray(err.data?.errors) && err.data.errors.length) return err.data.errors.join(' ')
+        for (const list of [err.data?.data?.errors, err.data?.errors]) {
+          if (Array.isArray(list) && list.length && list.every((x) => typeof x === 'string')) return list.join(' ')
+        }
         break
       case HTTP.TooLarge:
         return 'The file is too big. The limit is 10 MB.'
