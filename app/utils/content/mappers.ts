@@ -17,7 +17,7 @@ function pickImage(row: AppRow, fileUrl: (fileId: string) => string): string | u
 export function mapApp(row: AppRow, fileUrl: (fileId: string) => string): AppEntry {
   const img = pickImage(row, fileUrl)
   return {
-    id: row.$id,
+    id: row.id,
     name: row.name,
     kind: row.kind,
     stack: row.stack,
@@ -32,7 +32,7 @@ export function mapApp(row: AppRow, fileUrl: (fileId: string) => string): AppEnt
 
 export function mapPost(row: PostRow): Post {
   return {
-    id: row.$id,
+    id: row.id,
     slug: row.slug,
     title: row.title,
     description: row.description ?? '',
@@ -42,5 +42,5 @@ export function mapPost(row: PostRow): Post {
 }
 
 export function mapPage(row: PageRow): SitePage {
-  return { id: row.$id, slug: row.slug, title: row.title, body: row.body }
+  return { id: row.id, slug: row.slug, title: row.title, body: row.body }
 }

@@ -1,6 +1,5 @@
 import { Account, AppwriteException, Client, ID, Query, Storage, TablesDB } from 'appwrite'
 import type { Models } from 'appwrite'
-import { rowPermissions } from '~/utils/content/admin'
 
 export const ADMIN_LABEL = 'admin'
 export const ADMIN_TABLE = { Apps: 'apps', Posts: 'posts', Pages: 'pages' } as const
@@ -68,11 +67,10 @@ export function useAdmin() {
     return res.rows as unknown as R[]
   }
 
-  /** Creates (no id) or updates a row. Publishing is the read(any) permission, set here. */
+  /** Creates (no id) or updates a row. */
   async function save(tableId: AdminTable, id: string | undefined, data: Record<string, unknown>, published: boolean): Promise<void> {
-    const permissions = rowPermissions(published)
-    if (id) await db.updateRow({ databaseId: cfg.databaseId, tableId, rowId: id, data, permissions })
-    else await db.createRow({ databaseId: cfg.databaseId, tableId, rowId: ID.unique(), data, permissions })
+    if (id) await db.updateRow({ databaseId: cfg.databaseId, tableId, rowId: id, data })
+    else await db.createRow({ databaseId: cfg.databaseId, tableId, rowId: ID.unique(), data })
   }
 
   async function remove(tableId: AdminTable, id: string): Promise<void> {

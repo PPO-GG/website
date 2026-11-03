@@ -95,9 +95,9 @@ function startEdit(id: string) {
   errors.value = []
   confirmDelete.value = false
   notice.value = ''
-  if (tab.value === TAB.Apps) appForm.value = appToForm(apps.value.find((r) => r.$id === id)!)
-  else if (tab.value === TAB.Posts) postForm.value = postToForm(posts.value.find((r) => r.$id === id)!)
-  else pageForm.value = pageToForm(pages.value.find((r) => r.$id === id)!)
+  if (tab.value === TAB.Apps) appForm.value = appToForm(apps.value.find((r) => r.id === id)!)
+  else if (tab.value === TAB.Posts) postForm.value = postToForm(posts.value.find((r) => r.id === id)!)
+  else pageForm.value = pageToForm(pages.value.find((r) => r.id === id)!)
   editing.value = { id }
 }
 
@@ -117,7 +117,7 @@ function startSystem(slug: SystemSlug) {
       blocks: slug === SYSTEM_SLUGS.Home ? defaultHome() : defaultServices(), published: true,
     }
   }
-  editing.value = { id: row?.$id, system: slug }
+  editing.value = { id: row?.id, system: slug }
 }
 
 function cancel() {
@@ -199,9 +199,9 @@ async function remove() {
 }
 
 const list = computed<{ id: string; title: string; sub: string; published: boolean }[]>(() => {
-  if (tab.value === TAB.Apps) return apps.value.map((r) => ({ id: r.$id, title: r.name, sub: `${r.kind} / ${r.year}`, published: r.published }))
-  if (tab.value === TAB.Posts) return posts.value.map((r) => ({ id: r.$id, title: r.title, sub: `/blog/${r.slug}`, published: r.published }))
-  return pages.value.filter((r) => !isSystemSlug(r.slug)).map((r) => ({ id: r.$id, title: r.title, sub: `/${r.slug}`, published: r.published }))
+  if (tab.value === TAB.Apps) return apps.value.map((r) => ({ id: r.id, title: r.name, sub: `${r.kind} / ${r.year}`, published: r.published }))
+  if (tab.value === TAB.Posts) return posts.value.map((r) => ({ id: r.id, title: r.title, sub: `/blog/${r.slug}`, published: r.published }))
+  return pages.value.filter((r) => !isSystemSlug(r.slug)).map((r) => ({ id: r.id, title: r.title, sub: `/${r.slug}`, published: r.published }))
 })
 </script>
 
