@@ -1,0 +1,28 @@
+// Cloudflare Worker for ppo.gg. `pnpm build` writes .output; `wrangler deploy` uploads it.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "ppogg",
+  "main": ".output/server/index.mjs",
+  // Must match compatibilityDate in nuxt.config.ts.
+  "compatibility_date": "2025-07-15",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": { "binding": "ASSETS", "directory": ".output/public" },
+  // wrangler creates the DNS record for ppo.gg and points it at this Worker.
+  "routes": [{ "pattern": "ppo.gg", "custom_domain": true }],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "ppogg",
+      // Fill in from `wrangler d1 create ppogg`.
+      "database_id": "1353ace7-c646-4729-99f7-cd76a875d253",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "ppogg-media" }],
+  "vars": {
+    // Your Zero Trust team domain, for example myteam.cloudflareaccess.com
+    "ACCESS_TEAM_DOMAIN": "ppo.cloudflareaccess.com",
+    // The Application Audience (AUD) tag of the Access application for /admin and /api/admin
+    "ACCESS_AUD": "27040b0695349bab431224917dd1a291f942e624847385cee85a7ff8bb77acbb"
+  }
+}

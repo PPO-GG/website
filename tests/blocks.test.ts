@@ -67,7 +67,7 @@ describe('page forms in builder mode', () => {
     const form = { ...blankPage(), title: 'About', slug: 'about', blocks: [t] }
     expect(validatePage(form)).toEqual([])
     const data = toPageData(form)
-    const back = pageToForm({ $id: '1', title: 'About', slug: 'about', body: String(data.body), published: true })
+    const back = pageToForm({ id: '1', title: 'About', slug: 'about', body: String(data.body), published: true })
     expect(back.mode).toBe('blocks')
     expect(back.blocks[0]?.data.body).toBe('Hello')
   })

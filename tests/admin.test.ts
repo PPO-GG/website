@@ -2,17 +2,8 @@ import { describe, expect, it } from 'vitest'
 import type { AppRow, PageRow, PostRow } from '~/types/app'
 import {
   STACK_MAX, appToForm, blankApp, blankPage, blankPost, formatStack, pageToForm, parseStack, postToForm,
-  rowPermissions, toAppData, toPageData, toPostData, validateApp, validatePage, validatePost,
+  toAppData, toPageData, toPostData, validateApp, validatePage, validatePost,
 } from '~/utils/content/admin'
-
-describe('rowPermissions', () => {
-  it('lets anyone read a published row', () => {
-    expect(rowPermissions(true)).toEqual(['read("any")'])
-  })
-  it('gives a draft no public permission', () => {
-    expect(rowPermissions(false)).toEqual([])
-  })
-})
 
 describe('parseStack and formatStack', () => {
   it('splits on commas and slashes, trims, and drops empty items', () => {
@@ -106,21 +97,21 @@ describe('blank forms', () => {
 describe('row to form', () => {
   it('maps an app row, turning null text into empty text', () => {
     const row: AppRow = {
-      $id: 'a', name: 'N', kind: 'K', stack: ['x', 'y'], year: 2026, status: 'beta', href: '#', order: 3,
+      id: 'a', name: 'N', kind: 'K', stack: ['x', 'y'], year: 2026, status: 'beta', href: '#', order: 3,
       description: null, imageId: null, imageUrl: 'https://x.test/i.png', published: true,
     }
     expect(appToForm(row)).toMatchObject({ stackText: 'x, y', status: 'beta', description: '', imageId: '', imageUrl: 'https://x.test/i.png', published: true })
   })
   it('falls back to wip when the row status is unknown', () => {
-    const row = { $id: 'a', name: 'N', kind: 'K', stack: [], year: 2026, status: 'zzz', href: '#', order: 0, published: false } as AppRow
+    const row = { id: 'a', name: 'N', kind: 'K', stack: [], year: 2026, status: 'zzz', href: '#', order: 0, published: false } as AppRow
     expect(appToForm(row).status).toBe('wip')
   })
   it('maps a post row and keeps only the date part of the publish time', () => {
-    const row: PostRow = { $id: 'p', slug: 's', title: 'T', description: null, body: 'B', publishedAt: '2026-10-26T14:30:00.000+00:00', published: true }
+    const row: PostRow = { id: 'p', slug: 's', title: 'T', description: null, body: 'B', publishedAt: '2026-10-26T14:30:00.000+00:00', published: true }
     expect(postToForm(row)).toEqual({ title: 'T', slug: 's', description: '', body: 'B', date: '2026-10-26', published: true })
   })
   it('maps a page row', () => {
-    const row: PageRow = { $id: 'g', slug: 'about', title: 'About', body: 'B', published: false }
+    const row: PageRow = { id: 'g', slug: 'about', title: 'About', body: 'B', published: false }
     expect(pageToForm(row)).toEqual({ title: 'About', slug: 'about', mode: 'markdown', body: 'B', blocks: [], published: false })
   })
 })

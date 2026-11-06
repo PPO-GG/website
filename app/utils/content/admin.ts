@@ -59,11 +59,6 @@ function isRealDate(d: string): boolean {
   return !Number.isNaN(t.getTime()) && t.toISOString().startsWith(d)
 }
 
-/** Read access for guests is the whole publish switch: Appwrite hides rows without it. */
-export function rowPermissions(published: boolean): string[] {
-  return published ? ['read("any")'] : []
-}
-
 export function parseStack(text: string): string[] {
   const seen = new Set<string>()
   const out: string[] = []

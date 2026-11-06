@@ -16,7 +16,7 @@ export interface AppEntry {
 }
 
 export interface AppRow {
-  $id: string
+  id: string
   name: string
   kind: string
   stack: string[]
@@ -40,7 +40,7 @@ export interface Post {
 }
 
 export interface PostRow {
-  $id: string
+  id: string
   slug: string
   title: string
   description?: string | null
@@ -57,7 +57,7 @@ export interface SitePage {
 }
 
 export interface PageRow {
-  $id: string
+  id: string
   slug: string
   title: string
   body: string

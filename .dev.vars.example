@@ -1,0 +1,4 @@
+# Copy to .dev.vars for local development. Never commit .dev.vars.
+# ADMIN_DEV_BYPASS=1 skips the Cloudflare Access check. It works only under `nuxt dev`
+# (import.meta.dev); the production build ignores it.
+ADMIN_DEV_BYPASS=1

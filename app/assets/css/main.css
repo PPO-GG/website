@@ -609,12 +609,6 @@ textarea:focus {
   border-left: 3px solid #fff;
   padding-left: 10px;
 }
-.login {
-  max-width: 360px;
-  margin: 18vh auto 0;
-  display: grid;
-  gap: 16px;
-}
 .shot-row {
   display: flex;
   gap: 12px;

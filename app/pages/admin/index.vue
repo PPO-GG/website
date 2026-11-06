@@ -45,8 +45,7 @@ const SYSTEM_ENTRIES: { slug: SystemSlug; title: string; sub: string }[] = [
 ]
 const systemRow = (slug: SystemSlug) => pages.value.find((r) => r.slug === slug)
 
-// Load the lists whenever a user appears, from a saved session or a fresh login. The login form
-// unmounts as soon as the user is set, so its "done" event cannot be relied on to start the load.
+// Load the lists whenever a user appears, and clear them when the user goes.
 watch(() => admin.user.value, (u) => {
   if (u) void loadAll()
   else apps.value = posts.value = pages.value = []
@@ -71,11 +70,6 @@ async function loadAll() {
   }
 }
 
-async function logout() {
-  await admin.logout()
-  editing.value = null
-}
-
 function switchTab(t: Tab) {
   tab.value = t
   cancel()
@@ -95,9 +89,9 @@ function startEdit(id: string) {
   errors.value = []
   confirmDelete.value = false
   notice.value = ''
-  if (tab.value === TAB.Apps) appForm.value = appToForm(apps.value.find((r) => r.$id === id)!)
-  else if (tab.value === TAB.Posts) postForm.value = postToForm(posts.value.find((r) => r.$id === id)!)
-  else pageForm.value = pageToForm(pages.value.find((r) => r.$id === id)!)
+  if (tab.value === TAB.Apps) appForm.value = appToForm(apps.value.find((r) => r.id === id)!)
+  else if (tab.value === TAB.Posts) postForm.value = postToForm(posts.value.find((r) => r.id === id)!)
+  else pageForm.value = pageToForm(pages.value.find((r) => r.id === id)!)
   editing.value = { id }
 }
 
@@ -117,7 +111,7 @@ function startSystem(slug: SystemSlug) {
       blocks: slug === SYSTEM_SLUGS.Home ? defaultHome() : defaultServices(), published: true,
     }
   }
-  editing.value = { id: row?.$id, system: slug }
+  editing.value = { id: row?.id, system: slug }
 }
 
 function cancel() {
@@ -146,11 +140,11 @@ async function submit() {
   if (errors.value.length) return
   busy.value = true
   try {
-    if (t === TAB.Apps) await admin.save(ADMIN_TABLE.Apps, editing.value.id, toAppData(appForm.value), appForm.value.published)
-    else if (t === TAB.Posts) await admin.save(ADMIN_TABLE.Posts, editing.value.id, toPostData(postForm.value), postForm.value.published)
-    else await admin.save(ADMIN_TABLE.Pages, editing.value.id, toPageData(pageForm.value), pageForm.value.published)
+    if (t === TAB.Apps) await admin.save(ADMIN_TABLE.Apps, editing.value.id, toAppData(appForm.value))
+    else if (t === TAB.Posts) await admin.save(ADMIN_TABLE.Posts, editing.value.id, toPostData(postForm.value))
+    else await admin.save(ADMIN_TABLE.Pages, editing.value.id, toPageData(pageForm.value))
     await loadAll()
-    notice.value = 'Saved. Published items show on the site within one minute.'
+    notice.value = 'Saved. Published items show on the site now.'
     cancel()
   } catch (e) {
     console.error(`[admin] could not save ${NOUN[t]}`, e)
@@ -166,9 +160,9 @@ async function submitSettings() {
   busy.value = true
   try {
     const data = { title: 'Site settings', slug: SYSTEM_SLUGS.Settings, body: serializeSettings(settingsForm.value), published: settingsPublished.value }
-    await admin.save(ADMIN_TABLE.Pages, editing.value?.id, data, settingsPublished.value)
+    await admin.save(ADMIN_TABLE.Pages, editing.value?.id, data)
     await loadAll()
-    notice.value = 'Saved. Header and footer update within one minute.'
+    notice.value = 'Saved. Header and footer update on the next page load.'
     cancel()
   } catch (e) {
     console.error('[admin] could not save site settings', e)
@@ -199,23 +193,22 @@ async function remove() {
 }
 
 const list = computed<{ id: string; title: string; sub: string; published: boolean }[]>(() => {
-  if (tab.value === TAB.Apps) return apps.value.map((r) => ({ id: r.$id, title: r.name, sub: `${r.kind} / ${r.year}`, published: r.published }))
-  if (tab.value === TAB.Posts) return posts.value.map((r) => ({ id: r.$id, title: r.title, sub: `/blog/${r.slug}`, published: r.published }))
-  return pages.value.filter((r) => !isSystemSlug(r.slug)).map((r) => ({ id: r.$id, title: r.title, sub: `/${r.slug}`, published: r.published }))
+  if (tab.value === TAB.Apps) return apps.value.map((r) => ({ id: r.id, title: r.name, sub: `${r.kind} / ${r.year}`, published: r.published }))
+  if (tab.value === TAB.Posts) return posts.value.map((r) => ({ id: r.id, title: r.title, sub: `/blog/${r.slug}`, published: r.published }))
+  return pages.value.filter((r) => !isSystemSlug(r.slug)).map((r) => ({ id: r.id, title: r.title, sub: `/${r.slug}`, published: r.published }))
 })
 </script>
 
 <template>
   <div class="wrap admin">
     <p v-if="!ready" class="notice">Loading</p>
-    <AdminLogin v-else-if="!admin.user.value" />
+    <p v-else-if="!admin.user.value" class="notice err">You have no access. Log in with Cloudflare Access.</p>
     <template v-else>
       <header class="admin-head">
         <h1>Admin</h1>
         <span class="admin-who">
           {{ admin.user.value.email }}
           <NuxtLink to="/" target="_blank">View site</NuxtLink>
-          <button type="button" class="btn small" @click="logout">Log out</button>
         </span>
       </header>
 

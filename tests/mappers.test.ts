@@ -5,12 +5,12 @@ import { mapApp, mapPage, mapPost } from '~/utils/content/mappers'
 const url = (id: string) => `https://files.test/${id}`
 
 const appRow = (over: Partial<AppRow> = {}): AppRow => ({
-  $id: 'a1', name: 'Rundown', kind: 'Broadcasting Application', stack: ['nuxt', 'yjs'], year: 2026,
+  id: 'a1', name: 'Rundown', kind: 'Broadcasting Application', stack: ['nuxt', 'yjs'], year: 2026,
   status: 'live', href: 'https://stagepoint.io', order: 1, published: true, ...over,
 })
 
 describe('mapApp', () => {
-  it('copies the plain fields and uses $id as id', () => {
+  it('copies the plain fields and uses id as id', () => {
     const a = mapApp(appRow(), url)
     expect(a).toMatchObject({ id: 'a1', name: 'Rundown', stack: ['nuxt', 'yjs'], year: 2026, status: 'live', order: 1 })
   })
@@ -38,11 +38,11 @@ describe('mapApp', () => {
 
 describe('mapPost and mapPage', () => {
   it('maps a post and defaults a missing description to empty text', () => {
-    const row: PostRow = { $id: 'p1', slug: 'hi', title: 'Hi', body: '# Hi', publishedAt: '2026-10-26T00:00:00.000Z', published: true }
+    const row: PostRow = { id: 'p1', slug: 'hi', title: 'Hi', body: '# Hi', publishedAt: '2026-10-26T00:00:00.000Z', published: true }
     expect(mapPost(row)).toEqual({ id: 'p1', slug: 'hi', title: 'Hi', description: '', body: '# Hi', publishedAt: '2026-10-26T00:00:00.000Z' })
   })
   it('maps a page', () => {
-    const row: PageRow = { $id: 'g1', slug: 'about', title: 'About', body: 'text', published: true }
+    const row: PageRow = { id: 'g1', slug: 'about', title: 'About', body: 'text', published: true }
     expect(mapPage(row)).toEqual({ id: 'g1', slug: 'about', title: 'About', body: 'text' })
   })
 })

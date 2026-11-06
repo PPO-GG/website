@@ -5,3 +5,5 @@ node_modules
 dist
 .superpowers
 .deploy
+.dev.vars
+.wrangler

@@ -34,7 +34,7 @@ async function onFile(e: Event) {
     <div class="field"><label for="a-kind">Kind</label><input id="a-kind" v-model="form.kind" type="text" maxlength="120" placeholder="Web app"></div>
     <div class="field wide">
       <label for="a-stack">Stack</label>
-      <input id="a-stack" v-model="form.stackText" type="text" placeholder="Nuxt, Yjs, Appwrite">
+      <input id="a-stack" v-model="form.stackText" type="text" placeholder="Nuxt, Vue, D1">
       <small>Separate items with commas.</small>
     </div>
     <div class="field"><label for="a-year">Year</label><input id="a-year" v-model.number="form.year" type="number" min="1990" max="2100"></div>

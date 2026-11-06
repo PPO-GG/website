@@ -1,5 +1,5 @@
 /** Slugs that would shadow a built-in route. */
-export const RESERVED_SLUGS: readonly string[] = ['admin', 'api', 'blog', 'services', 'home', 'site-settings', 'login', 'logo', 'ppo', 'assets', 'shots', '_nuxt']
+export const RESERVED_SLUGS: readonly string[] = ['admin', 'api', 'blog', 'services', 'home', 'site-settings', 'login', 'logo', 'ppo', 'assets', 'shots', '_nuxt', 'media', 'cdn-cgi']
 
 /** Pages the site itself uses. They are edited in the admin but cannot be created as ordinary pages. */
 export const SYSTEM_SLUGS = { Home: 'home', Services: 'services', Settings: 'site-settings' } as const
