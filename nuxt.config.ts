@@ -3,6 +3,13 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   modules: ["@nuxtjs/mdc", "@nuxt/fonts"],
   css: ["~/assets/css/main.css", "~/assets/css/site.css"],
+  fonts: {
+    defaults: {
+      weights: [400, 500, 600],
+      styles: ["normal"],
+      subsets: ["latin"],
+    },
+  },
   runtimeConfig: {
     public: {
       appwrite: {
@@ -14,9 +21,9 @@ export default defineNuxtConfig({
     },
   },
   routeRules: {
-    "/": { cache: { maxAge: 30, swr: false } },
-    "/_payload.json": { cache: { maxAge: 30, swr: false } },
-    "/blog/**": { cache: { maxAge: 30, swr: false } },
+    "/": { cache: { maxAge: 60, swr: true } },
+    "/_payload.json": { cache: { maxAge: 60, swr: true } },
+    "/blog/**": { cache: { maxAge: 60, swr: true } },
     "/admin/**": { ssr: false },
   },
   app: {
