@@ -47,6 +47,15 @@ wrangler is a dev dependency of this repo, so run it with `pnpm exec wrangler`.
 
 Never set `ADMIN_DEV_BYPASS` on the deployed Worker; it has no effect there, but it should not exist.
 
+### Automatic deploys
+
+Cloudflare Workers Builds deploys the `ppogg` Worker from this repo. Each commit to `main` starts a build in the Cloudflare dashboard (Workers & Pages > `ppogg` > Settings > Builds).
+
+- Build command: `pnpm build`. Deploy command: `npx wrangler deploy`.
+- A build does not run database migrations. When a change adds a file to `migrations/`, apply it first: `pnpm db:migrate`. Then merge.
+- If a build fails on the Node version, set the build variable `NODE_VERSION` to `22`.
+- To deploy by hand, use `pnpm cf:deploy`.
+
 ## Troubleshooting
 
 - `nuxt prepare` fails with "The requested module 'simple-git' does not provide an export named 'default'" and a stack in another project's `node_modules`: a `node_modules` folder (or link) above this repo, such as `C:\node_modules`, is being found before this repo's packages. `@nuxt/devtools` is a declared dev dependency so that Nuxt finds its own copy; if another undeclared package leaks in, remove the stray parent `node_modules`.
