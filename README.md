@@ -53,6 +53,7 @@ Cloudflare Workers Builds deploys the `ppogg` Worker from this repo. Each commit
 
 - Build command: `pnpm build`. Deploy command: `npx wrangler deploy`.
 - A build does not run database migrations. When a change adds a file to `migrations/`, apply it first: `pnpm db:migrate`. Then merge.
+- The repo needs pnpm 10: `pnpm-workspace.yaml` uses pnpm 10 settings, and `packageManager` in `package.json` pins `pnpm@10.30.1`. If the build log says `packages field missing or empty`, the build used pnpm 9. Set the build variable `PNPM_VERSION` to `10.30.1` in the Builds settings.
 - If a build fails on the Node version, set the build variable `NODE_VERSION` to `22`.
 - To deploy by hand, use `pnpm cf:deploy`.
 
